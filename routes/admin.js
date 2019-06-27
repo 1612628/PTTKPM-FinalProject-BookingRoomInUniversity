@@ -1,13 +1,11 @@
-var express = require('express');
-var path = require('path');
-var router = express.Router();
+const express = require('express')
+const router = express.Router()
 
-var QuanTriVienController = require('../controllers/quantrivien');
+// '../' is malicous
+const path = require('path')
 
+router.get('/', (req, res) => {
+    res.sendFile(path.resolve(__dirname + '/../views/admin.html'))
+})
 
-router.post('/dummyCreateAdmin',(req,res)=>{
-    var taikhoanquantri={ten_dang_nhap:"1",mat_khau:"1",ho_va_ten:"admin"}
-    QuanTriVienController.taoTaiKhoanQuanTriVien(req.body)
-});
-
-module.exports=router;
+module.exports = router

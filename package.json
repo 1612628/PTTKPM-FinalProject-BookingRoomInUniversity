@@ -5,7 +5,10 @@
   "main": "app.js",
   "scripts": {
     "test": "nodemon app.js",
-    "start": "node app.js"
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "build-admin": "webpack --mode production --entry ./src/admin/main.jsx --output ./dist/admin/main.js",
+    "watch-admin": "webpack --mode development --watch --entry ./src/admin/main.jsx --output ./dist/admin/main.js"
   },
   "repository": {
     "type": "git",
@@ -18,15 +21,35 @@
   },
   "homepage": "https://github.com/1612628/PTTKPM-FinalProject-BookingRoomInUniversity#readme",
   "dependencies": {
+    "@babel/polyfill": "^7.4.4",
+    "bcryptjs": "^2.4.3",
     "dotenv": "^8.0.0",
     "express": "^4.17.1",
+    "fs": "^0.0.1-security",
+    "jsonwebtoken": "^8.5.1",
+    "moment": "^2.24.0",
+    "path": "^0.12.7",
     "pg": "^7.11.0",
     "pg-hstore": "^2.3.3",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-redux": "^7.1.0",
+    "react-router-dom": "^5.0.1",
+    "redux": "^4.0.1",
+    "redux-thunk": "^2.3.0",
     "sequelize": "^5.8.12",
     "sequelize-cli": "^5.5.0",
-    "path": "^0.12.7",
-    "fs": "^0.0.1-security",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^8.5.1"
+    "sweetalert2": "^8.13.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
+    "@babel/preset-react": "^7.0.0",
+    "babel-loader": "^8.0.6",
+    "compression-webpack-plugin": "^3.0.0",
+    "nodemon": "^1.19.1",
+    "webpack": "^4.35.0",
+    "webpack-cli": "^3.3.5"
   }
 }
