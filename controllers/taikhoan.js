@@ -1,11 +1,11 @@
-var controller={}
+var controller={};
 
 var models = require('../models');
 var bcrypt = require('bcryptjs');
 
 var authen = require('./authentication');
 
-controller.taoTaiKhoan = function(taikhoan,callback){
+controller.taoTaiKhoan=function(taikhoan,callback){
     bcrypt.genSalt(10,function(err,salt){
         bcrypt.hash(taikhoan.mat_khau,salt,function(err,hash){
             taikhoan.mat_khau=hash;
@@ -61,6 +61,5 @@ controller.daDangNhap=function(req,res,next){
         returnURL=${req.originalUrl}`);
     }
 };
-
 
 module.exports=controller;

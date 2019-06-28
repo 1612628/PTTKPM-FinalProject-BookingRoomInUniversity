@@ -1,12 +1,12 @@
 var controller={};
 
-var taikhoan = require('./taikhoan');
+var taikhoanController = require('./taikhoan');
 var models = require('../models');
 
-controller.taoTaiKhoanQuanTriVien= function(taikhoan,callback){
-    taikhoan.taoTaiKhoan(taikhoan,function(taikhoanmoi){
+controller.taoTaiKhoanQuanTriVien = function(taikhoan,phongban,callback){
+    taikhoanController.taoTaiKhoan(taikhoan,function(taikhoanmoi){
         if(taikhoanmoi!=null){
-            var taikhoanquantri = {ma_quan_tri:taikhoanmoi.ma_tai_khoan,phong_ban:"HCMUS"}
+            var taikhoanquantri = {ma_quan_tri:taikhoanmoi.ma_tai_khoan,phong_ban:phongban}
             models.quan_tri_vien
             .create(taikhoanquantri)
             .then(quantrivienmoi=>{
@@ -46,4 +46,4 @@ controller.dangNhap=function(req,res,next){
     });
 };
 
-var models = require('../models');
+module.exports=controller;

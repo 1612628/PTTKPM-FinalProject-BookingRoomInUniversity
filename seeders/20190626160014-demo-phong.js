@@ -15,7 +15,7 @@ module.exports = {
     return queryInterface.bulkInsert('phongs', [{
         ten_phong: "1",
         mo_ta_phong: "",
-        tinh_trang: "Tốt",
+        tinh_trang: 1,
         diem_phong: 10,
         created_at:new Date(),
         updated_at:new Date()
@@ -23,7 +23,7 @@ module.exports = {
       {
         ten_phong: "2",
         mo_ta_phong: "",
-        tinh_trang: "Tốt",
+        tinh_trang: 2,
         diem_phong: 10,
         created_at:new Date(),
         updated_at:new Date()
@@ -31,7 +31,7 @@ module.exports = {
       {
         ten_phong: "3",
         mo_ta_phong: "",
-        tinh_trang: "Tốt",
+        tinh_trang: 1,
         diem_phong: 10,
         created_at:new Date(),
         updated_at:new Date()
@@ -39,7 +39,7 @@ module.exports = {
       {
         ten_phong: "4",
         mo_ta_phong: "",
-        tinh_trang: "Tốt",
+        tinh_trang: 1,
         diem_phong: 10,
         created_at:new Date(),
         updated_at:new Date()
@@ -47,7 +47,7 @@ module.exports = {
       {
         ten_phong: "5",
         mo_ta_phong: "",
-        tinh_trang: "Tốt",
+        tinh_trang: 1,
         diem_phong: 10,
         created_at:new Date(),
         updated_at:new Date()
@@ -55,7 +55,7 @@ module.exports = {
       {
         ten_phong: "6",
         mo_ta_phong: "",
-        tinh_trang: "Tốt",
+        tinh_trang: 1,
         diem_phong: 10,
         created_at:new Date(),
         updated_at:new Date()
@@ -63,7 +63,7 @@ module.exports = {
       {
         ten_phong: "7",
         mo_ta_phong: "",
-        tinh_trang: "Tốt",
+        tinh_trang: 1,
         diem_phong: 10,
         created_at:new Date(),
         updated_at:new Date()
@@ -71,7 +71,7 @@ module.exports = {
       {
         ten_phong: "8",
         mo_ta_phong: "",
-        tinh_trang: "Tốt",
+        tinh_trang: 1,
         diem_phong: 15,
         created_at:new Date(),
         updated_at:new Date()
@@ -79,7 +79,7 @@ module.exports = {
       {
         ten_phong: "9",
         mo_ta_phong: "",
-        tinh_trang: "Tốt",
+        tinh_trang: 1,
         diem_phong: 15,
         created_at:new Date(),
         updated_at:new Date()
@@ -87,7 +87,7 @@ module.exports = {
       {
         ten_phong: "10",
         mo_ta_phong: "",
-        tinh_trang: "Tốt",
+        tinh_trang: 1,
         diem_phong: 15,
         created_at:new Date(),
         updated_at:new Date()

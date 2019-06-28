@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <title>Portal</title>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css">
+  <!-- Bootstrap core CSS -->
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Material Design Bootstrap -->
+  <link href="/css/mdb.min.css" rel="stylesheet">
+
+  <link href="/css/addons/datatables.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/thanh-vien-trang-chu.css">
+
+</head>
+
+<body>
+  
+  <!-- header -->
+  <div id="header-container">
+    </div>
+    <script id="header-template" type="text/x-handlebars-template">
+      {{> headerPartial content=user}}
+        </script>
+    <!-- /header -->
+  <!-- Banner -->
+  <div class="container pt-5">
+      <div class="row card h-100">
+          <div class="col-xl-2 col-md-3 col-sm-4 card">
+            <div class="card-body">
+              <div class="text-sx font-weight-bold text-primary text-uppercase">
+                Danh sách phòng
+              </div>
+            </div>
+          </div>
+        </div>
+  </div>
+  <!-- /Banner -->
+
+  <!-- body -->
+
+  <div class="container py-5">
+      <div class="row pl-3">
+          <div class="col-lx-2 col-md-3 col-sm-4 mr-5">
+            <div class="row pb-2">
+              <p class="text-left font-weight-bold">Cơ sở</p>
+            </div>      
+            <div class="row form">
+              <input type="text" list="danh-sach-co-so" id="co-so" class="datalist pl-2 form-control">
+              <datalist id="danh-sach-co-so">
+              </datalist>
+            </div>    
+          </div>
+          <div class="col-lx-2 col-md-3 col-sm-4">
+              <div class="row pb-2">
+                  <p class="text-left font-weight-bold">Toà nhà</p> 
+                </div>      
+                <div class="row form">
+                  <input type="text" list="danh-sach-toa-nha" id="co-so" class="datalist pl-2 form-control">
+                  <datalist id="danh-sach-toa-nha">
+                  </datalist>
+                </div>  
+          </div>
+          <div class="col-lx-2 col-md-3 col-sm-4 pt-4 mt-3  ">
+            <button type="button" class="btn btn-info" >Tìm kiếm</button>  
+          </div>
+        </div>
+  </div>
+
+  <div id="dat-phong-container">
+  </div>
+  <script id="dat-phong-template" type="text/x-handlebars-template">
+    {{> datPhongPartial content=danhsachphong}}
+  </script>
+  <!-- /body -->
+
+  <!-- footer -->
+  <div id="footer-container">
+    </div>
+    <script id="footer-template" type="text/x-handlebars-template">
+      {{> footerPartial}}
+      </script>
+    <!-- /footer -->
+
+  <!-- script -->
+  <!-- JQuery -->
+  <script type="text/javascript" src="/js/jquery-3.4.1.min.js"></script>
+  <!-- Bootstrap tooltips -->
+  <script type="text/javascript" src="/js/popper.min.js"></script>
+  <!-- Bootstrap core JavaScript -->
+  <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+  <!-- MDB core JavaScript -->
+  <script type="text/javascript" src="/js/mdb.min.js"></script>
+
+  <script type="text/javascript" src="/js/addons/datatables.min.js"></script>
+
+  <script src="/js/handlebars-v4.1.2.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@8"></script>
+  
+  <script src="/js/helper.js"></script>
+  <script src="/js/header-footer.js"></script>
+  <script src="/js/thanh-vien.js"></script>
+
+</body>
+
+</html>
