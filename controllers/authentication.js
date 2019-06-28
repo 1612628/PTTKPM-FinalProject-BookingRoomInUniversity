@@ -1,5 +1,5 @@
 var jwt = require('jsonwebtoken');
-var models = require('./models');
+var models = require('../models');
 var config = require('../config/config.json');
 
 var controller = {};

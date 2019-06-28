@@ -15,7 +15,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       tinh_trang: {
-        type: Sequelize.STRING
+        type: Sequelize.INTEGER
       },
       diem_phong: {
         type: Sequelize.INTEGER

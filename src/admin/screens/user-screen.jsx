@@ -328,7 +328,7 @@ class UserScreen extends React.Component {
                     header={header}
                     renderItem={(item) => {
                         return this.renderUserItem(item, (
-                            <div class='text-center'>{item.point}</div>
+                            <div className='text-center'>{item.point}</div>
                         ), () => this.setState({ type: 2, newMember: item }))
                     }}
                     onRequestPage={this.handleMemberPageRequest}

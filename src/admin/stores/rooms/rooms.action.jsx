@@ -6,6 +6,9 @@ import Swal from 'sweetalert2'
 export const loadContent = () => {
     return (dispatch, getState) => {
         dispatch(loadStatusChoices())
+        dispatch(loadCampusChoices())
+        dispatch(loadBuildingChoices(0))
+        dispatch(loadBuildingChoicesNormal(0))
         dispatch(loadNormals(1))
         dispatch(loadHalls(1))
     }
@@ -225,12 +228,13 @@ const setCampusChoices = (data, err) => {
         error: err
     }
 }
-export const loadCampusChoices = () => {
+export const loadCampusChoices = (cb) => {
     return (dispatch, getState) => {
         dispatch(loadingCampusChoices(true))
-        AdminAPI.getRoomStatusChoices()
+        AdminAPI.getCampusChoices()
             .then(data => {
                 if (data.choices) {
+                    (cb || (() => console.warn('no callback')))(data.choices)
                     dispatch(setCampusChoices(data, null))
                     dispatch(loadingCampusChoices(false))
                 } else {
@@ -259,10 +263,10 @@ const setBuildingChoices = (data, err) => {
         error: err
     }
 }
-export const loadBuildingChoices = () => {
+export const loadBuildingChoices = (campusId) => {
     return (dispatch, getState) => {
         dispatch(loadingBuildingChoices(true))
-        AdminAPI.getRoomStatusChoices()
+        AdminAPI.getBuildingChoices(campusId)
             .then(data => {
                 if (data.choices) {
                     dispatch(setBuildingChoices(data, null))
@@ -293,10 +297,10 @@ const setBuildingChoicesNormal = (data, err) => {
         error: err
     }
 }
-export const loadBuildingChoicesNormal = () => {
+export const loadBuildingChoicesNormal = (campusId) => {
     return (dispatch, getState) => {
         dispatch(loadingBuildingChoicesNormal(true))
-        AdminAPI.getRoomStatusChoices()
+        AdminAPI.getBuildingChoices(campusId)
             .then(data => {
                 if (data.choices) {
                     dispatch(setBuildingChoicesNormal(data, null))

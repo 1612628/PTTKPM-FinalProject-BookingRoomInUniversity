@@ -14,14 +14,17 @@ module.exports = {
       phong_dat:{
         type: Sequelize.INTEGER
       },
-      tiet_hoc_dat:{
+      tiet_bat_dau:{
+        type: Sequelize.INTEGER
+      },
+      tiet_ket_thuc:{
         type: Sequelize.INTEGER
       },
       ngay_dat:{
         type: Sequelize.DATE
       },
       tinh_trang: {
-        type: Sequelize.STRING
+        type: Sequelize.INTEGER
       },
       createdAt: {
         allowNull: false,

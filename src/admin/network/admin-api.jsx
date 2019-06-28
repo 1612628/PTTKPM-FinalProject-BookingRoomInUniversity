@@ -8,7 +8,7 @@ const BASE_URL = 'http://localhost:8080/admin/api'
 const JWT_TOKEN = 'NIGAMON_JWT_TOKEN'
 const apiClient = new ApiClient(BASE_URL)
 const secureApiClient = new SecureApiClient(BASE_URL, JWT_TOKEN, () => {
-    // store.dispatch(logOut())
+    store.dispatch(logOut())
 }).client
 
 
@@ -30,37 +30,37 @@ export default class AdminApi {
         localStorage.removeItem(JWT_TOKEN)
     }
     static login(username, password) {
-        return ok({
-            isLogin: true
-        })
-        // return apiClient.postJson('/login', { username, password })
-        //     .then(data => {
-        //         if (!data.isLogin) {
-        //             return data
-        //         }
-        //         localStorage.setItem(JWT_TOKEN, data.token)
-        //         return {
-        //             ...data,
-        //             userInfo: {
-        //                 ...data.userInfo,
-        //                 lastLogin: new Date()
-        //             }
-        //         }
-        //     })
+        // return ok({
+        //     isLogin: true
+        // })
+        return apiClient.postJson('/login', { username, password })
+            .then(data => {
+                if (!data.isLogin) {
+                    return data
+                }
+                localStorage.setItem(JWT_TOKEN, data.token)
+                return {
+                    ...data,
+                    userInfo: {
+                        ...data.userInfo,
+                        lastLogin: new Date()
+                    }
+                }
+            })
     }
     static checkLogin() {
-        return ok({
-            isLogin: true
-        })
-        // return secureApiClient.getJson('/login')
-        //     .then(data => {
-        //         return {
-        //             ...data,
-        //             userInfo: {
-        //                 ...data.userInfo,
-        //             }
-        //         }
-        //     })
+        // return ok({
+        //     isLogin: true
+        // })
+        return secureApiClient.getJson('/login')
+            .then(data => {
+                return {
+                    ...data,
+                    userInfo: {
+                        ...data.userInfo,
+                    }
+                }
+            })
     }
 
     //--------------------- Dashboard ------------------------//
@@ -168,7 +168,26 @@ export default class AdminApi {
     static removeMember(member) {
         return secureApiClient.deleteJson(`/users/members/${member.id}`)
     }
-    //--------------------- Theaters ------------------------//
+
+    //--------------------- Rooms ------------------------//
+    // status
+    static getRoomStatusChoices() {
+        return secureApiClient.getJson('/rooms/status')
+    }
+
+    // campus
+    static getCampusChoices() {
+        return secureApiClient.getJson('/campus')
+    }
+
+    // building
+    static getBuildingChoices(campusId) {
+        return secureApiClient.getJson(`/buildings`, { params: { campus: campusId } })
+            .then(data => {
+                return data
+            })
+    }
+
     // status
     static getRoomStatusChoices() {
         return secureApiClient.getJson('/rooms/status')

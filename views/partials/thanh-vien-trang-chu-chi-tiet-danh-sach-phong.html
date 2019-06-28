@@ -1,0 +1,35 @@
+<script id="chi-tiet-danh-sach-phong-partial" type="text/x-handlebars-template">
+    <tbody>
+        {{#each content}}
+            <tr class="centered" id="chi-tiet-phong">
+                <td class="align-sefl-center align-content-center">{{ten_phong}}</td>
+                <td class="align-sefl-center align-content-center">{{tinh_trang}}</td>
+                <td class="align-sefl-center align-content-center">{{mo_ta_phong}}</td>
+                <td class="align-sefl-center align-content-center">{{loai_phong}}</td>
+                <td class="align-sefl-center align-content-center">{{thuoc_toa_nha}}</td>
+                <td class="align-sefl-center align-content-center">{{thuoc_co_so}}</td>
+                
+                <td class="align-sefl-center align-content-center">
+                    <select>
+                        {{#each danhsachtiethoc}}
+                            <option>{{ma_tiet_hoc}}</option>
+                        {{/each}}
+                    </select>
+                </td>
+                <td class="align-sefl-center align-content-center">
+                    <select>
+                        {{#each danhsachtiethoc}}
+                            <option>{{ma_tiet_hoc}}</option>
+                        {{/each}}
+                    </select>
+                </td>
+                <td class="align-sefl-center align-content-center">
+                    <span class="button-checkbox">
+                        <button type="button" onclick="chonPhong({{ma_phong}})" class="btn" data-color="success"></button>
+                        <input type="checkboxx" class="hidden">
+                    </span>
+                </td>
+            </tr>
+        {{/each}}
+    </tbody>
+</script>

@@ -7,4 +7,4 @@ const colors = [
     'text-info',
 ]
 
-export const getColor = id => colors[id - 1]
+export const getColorById = id => colors[id - 1]

@@ -1,0 +1,20 @@
+<script id="trang-chu-dat-phong-partial" type="text/x-handlebars-template">
+   {{#with content}}
+   <table id="dt-dat-phong" class="table table-striped table-sm table-hover" cellpacing="0">
+    <thead id="chimuc">
+        <th>Tên phòng</th>
+        <th>Tình trạng</th>
+        <th>Mô tả phòng</th>
+        <th>Loại phòng</th>
+        <th>Thuộc tòa nhà</th>
+        <th>Thuộc cơ sở</th>
+        <th>Tiết bắt đầu</th>
+        <th>Tiết kết thúc</th>
+        <th>
+        </th>
+    </thead>
+    {{> chiTietDatPhongPartial content=chitietdanhsachphong}}
+   </table>
+   {{/with}}
+
+</script>

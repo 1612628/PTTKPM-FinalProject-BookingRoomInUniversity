@@ -1,0 +1,30 @@
+<script id="header-partial" type="text/x-handlebars-template">
+    <header class="container-fluid nav-bar">
+            <div class="logo">
+                <a href="/trangchu">
+                    <img src="/img/logo75x60.png" alt="" srcset="">
+                    HCMUS Portal
+                </a> 
+            </div>
+            {{#with content}}
+            <ul class="nav">
+              <li style="display: list-item; margin-right: 50px;">
+                <div class="dropdown">
+                    <a href="#" class="dropdown-toggle waves-effect waves-light" role="button" id="dropDownAdminInfoLink"
+                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> 
+                        <img src="/img/user_icon.png" alt="" width="38px"> <b>{{ho_va_ten}}</b>
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="dropDownAdminInfoLink">
+                        <a class="dropdown-item waves-effect waves-light" href="/thongtincanhan">
+                            Thông tin cá nhân
+                        </a>
+                        <a class="dropdown-item waves-effect waves-light" href="#" onclick="dangXuat()">
+                            Đăng xuất
+                        </a>
+                    </div>
+                </div>
+              </li>
+            </ul>
+            {{/with}}
+        </header>
+</script>

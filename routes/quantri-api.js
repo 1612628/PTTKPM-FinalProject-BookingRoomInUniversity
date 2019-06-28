@@ -10,11 +10,10 @@ const LIMIT = 5;
 
 const {
     Sequelize,
-    tai_khoan,
-    quan_tri_vien,
-    thanh_vien,
-    thiet_bi,
-    quan_ly_thiet_bi
+    tai_khoan, quan_tri_vien, thanh_vien,
+    thiet_bi, quan_ly_thiet_bi,
+    tinh_trang_phong, phong, phong_hoi_truong, phong_hoc_thuong,
+    toa_nha, co_so
 } = require("../models");
 
 //---------------------------------- jwt middleware ------------------------------------//
@@ -425,20 +424,221 @@ router.get('/dashboard/charts', adminJwtMiddleware, (req, res) => {
     })
 })
 
-//------------------------------------ theaters ---------------------------------------------//
+//------------------------------------ rooms ---------------------------------------------//
+router.get('/campus', adminJwtMiddleware, (req, res) => {
+    co_so.findAndCountAll({
+    }).then(result => {
+        const campus = (result.rows.map(r => r.dataValues).map(r => ({
+            id: r.ma_co_so,
+            label: r.ten_co_so
+        })))
+        res.json({
+            choices: campus
+        })
+    }).catch(err => {
+        console.log(err)
+        res.status(500).send('GET Campus Error')
+    })
+})
+router.get('/buildings', adminJwtMiddleware, (req, res) => {
+    const campusid = parseInt(req.query.campus || 0)
+    if (campusid) {
+        co_so.findByPk(campusid)
+            .then(campus => toa_nha.findAndCountAll({
+                where: { thuoc_co_so: campus.ma_co_so }
+            })).then(result => {
+                const buildings = (result.rows.map(r => r.dataValues).map(r => ({
+                    id: r.ma_toa_nha,
+                    label: r.ten_toa_nha
+                })))
+                res.json({
+                    choices: buildings
+                })
+            }).catch(err => {
+                console.log(err)
+                res.status(500).send('GET Buildings Error')
+            })
+    } else {
+        toa_nha.findAndCountAll({
+        }).then(result => result.rows.map(r => r.dataValues).map(r => ({
+            id: r.ma_toa_nha,
+            label: r.ten_toa_nha
+        }))).then(buildings => {
+            res.json({
+                choices: buildings
+            })
+        }).catch(err => {
+            console.log(err)
+            res.status(500).send('GET Buildings Error')
+        })
+    }
+})
 router.get('/rooms/status', adminJwtMiddleware, (req, res) => {
-    TheaterStatus.findAndCountAll({
+    tinh_trang_phong.findAndCountAll({
     }).then(result => {
         const status = (result.rows.map(r => r.dataValues).map(r => ({
-            id: r.id,
-            label: r.name
+            id: r.ma_tinh_trang_phong,
+            label: r.mo_ta
         })))
         res.json({
             choices: status
         })
     }).catch(err => {
-        res.status(500).send('GET Theater Status Error')
+        res.status(500).send('GET Room Status Error')
     })
+})
+
+router.get('/rooms/normals', adminJwtMiddleware, (req, res) => {
+    console.log('normal rooms')
+    const query = req.query
+    const page = parseInt(query.page || 0)
+    const status = parseInt(query.status || 0)
+    const building = parseInt(query.building || 0)
+    const campus = parseInt(query.campus || 0)
+    const searchText = query.searchText
+
+    phong_hoc_thuong.findAndCountAll({
+        include: [
+            {
+                model: phong,
+                where: {
+                    ...(status ? ({ tinh_trang: status }) : {}),
+                }
+            },
+            {
+                model: toa_nha,
+                where: {
+                    ...(building ? ({ ma_toa_nha: building }) : {}),
+                    ...(campus ? ({ thuoc_co_so: campus }) : {}),
+                }
+            },
+        ],
+        ...(page ? ({
+            limit: LIMIT,
+            offset: LIMIT * (page - 1),
+            order: [['updatedAt', 'DESC']],
+        }) : {})
+    }).then(result => {
+        Promise.all(result.rows.map(r => r.dataValues).map(async r => {
+            const building = await toa_nha.findByPk(r.thuoc_toa_nha)
+            return {
+                id: r.ma_phong_hoc_thuong,
+                name: r.phong.ten_phong,
+                status: r.phong.tinh_trang,
+                point: r.phong.diem_phong,
+                description: r.phong.mo_ta_phong,
+                building: building.ma_toa_nha,
+                campus: building.thuoc_co_so
+            }
+        })).then(rooms => {
+            res.json({
+                rooms: rooms,
+                currentPage: page,
+                lastPage: Math.ceil(result.count / LIMIT),
+                total: result.count
+            })
+        })
+    }).catch(err => {
+        console.log(err)
+        res.status(500).send('GET Normal Rooms Error')
+    })
+})
+router.get('/rooms/halls', adminJwtMiddleware, (req, res) => {
+    console.log('hall rooms')
+    const query = req.query
+    const page = parseInt(query.page || 0)
+    const status = parseInt(query.status || 0)
+    const campus = parseInt(query.campus || 0)
+    const searchText = query.searchText
+
+    phong_hoi_truong.findAndCountAll({
+        include: [
+            {
+                model: phong,
+                where: {
+                    ...(status ? ({ tinh_trang: status }) : {}),
+                }
+            }
+        ],
+        where: {
+            ...(campus ? ({ thuoc_co_so: campus }) : {})
+        },
+        ...(page ? ({
+            limit: LIMIT,
+            offset: LIMIT * (page - 1),
+            order: [['updatedAt', 'DESC']],
+        }) : {})
+    }).then(result => {
+        const rooms = result.rows.map(r => r.dataValues).map(r => {
+            return {
+                id: r.ma_phong_hoi_truong,
+                name: r.phong.ten_phong,
+                status: r.phong.tinh_trang,
+                point: r.phong.diem_phong,
+                description: r.phong.mo_ta_phong,
+                campus: r.thuoc_co_so
+            }
+        })
+        res.json({
+            rooms: rooms,
+            currentPage: page,
+            lastPage: Math.ceil(result.count / LIMIT),
+            total: result.count
+        })
+    }).catch(err => {
+        console.log(err)
+        res.status(500).send('GET Hall Rooms Error')
+    })
+})
+router.post('/theaters/:id', adminJwtMiddleware, (req, res) => {
+    const add = req.query.addNew || false
+    const theater = req.body
+    if (parseInt(req.params.id) !== parseInt(theater.id)) {
+        return res.json({
+            code: 'FAILED',
+            msg: 'Mismatch ID'
+        })
+    }
+    if (add) {
+        Theater.create({
+            id: theater.id,
+            name: theater.name,
+            address: theater.address,
+            rowNum: theater.row,
+            seatPerRow: theater.column,
+            theaterStatusId: theater.status
+        }).then(() => {
+            res.json({ code: 'OK' })
+        }).catch(err => {
+            console.log(err)
+            res.json({
+                code: 'FAILED',
+                msg: err
+            })
+        })
+    } else {
+        Theater.update({
+            name: theater.name,
+            address: theater.address,
+            rowNum: theater.row,
+            seatPerRow: theater.column,
+            theaterStatusId: theater.status
+        }, {
+                where: {
+                    id: theater.id
+                }
+            }).then(() => {
+                res.json({
+                    code: 'OK'
+                })
+            }).catch(err => {
+                console.log(err)
+                res.json({
+                    code: 'FAILED',
+                    msg: err
+                })
+            })
+    }
 })
 router.get('/theaters/:theaterid/showtimes', adminJwtMiddleware, (req, res) => {
     const theater = parseInt(req.params.theaterid)
@@ -563,108 +763,7 @@ router.delete('/theaters/:theaterid/showtimes/:showtimeid', adminJwtMiddleware, 
         })
     })
 })
-router.get('/theaters', adminJwtMiddleware, (req, res) => {
-    console.log('theaters')
-    const query = req.query
-    const page = parseInt(query.page || 0)
-    const status = parseInt(query.status || 0)
-    const searchText = query.searchText
 
-    Theater.findAndCountAll({
-        where: {
-            ...(status ? { theaterStatusId: status } : {})
-        },
-        ...(page ? ({
-            limit: LIMIT,
-            offset: LIMIT * (page - 1),
-            order: [['updatedAt', 'DESC']],
-        }) : {})
-    }).then(result => {
-        const theaters = (result.rows.map(r => r.dataValues).map(r => ({
-            id: r.id,
-            name: r.name,
-            address: r.address,
-            row: r.rowNum,
-            column: r.seatPerRow,
-            status: r.theaterStatusId
-        })))
-        res.json({
-            theaters: theaters,
-            currentPage: page,
-            lastPage: Math.ceil(result.count / LIMIT),
-            total: result.count
-        })
-    }).catch(err => {
-        res.status(500).send('GET Theaters Error')
-    })
-})
-router.post('/theaters/:id', adminJwtMiddleware, (req, res) => {
-    const add = req.query.addNew || false
-    const theater = req.body
-    if (parseInt(req.params.id) !== parseInt(theater.id)) {
-        return res.json({
-            code: 'FAILED',
-            msg: 'Mismatch ID'
-        })
-    }
-    if (add) {
-        Theater.create({
-            id: theater.id,
-            name: theater.name,
-            address: theater.address,
-            rowNum: theater.row,
-            seatPerRow: theater.column,
-            theaterStatusId: theater.status
-        }).then(() => {
-            res.json({ code: 'OK' })
-        }).catch(err => {
-            console.log(err)
-            res.json({
-                code: 'FAILED',
-                msg: err
-            })
-        })
-    } else {
-        Theater.update({
-            name: theater.name,
-            address: theater.address,
-            rowNum: theater.row,
-            seatPerRow: theater.column,
-            theaterStatusId: theater.status
-        }, {
-                where: {
-                    id: theater.id
-                }
-            }).then(() => {
-                res.json({
-                    code: 'OK'
-                })
-            }).catch(err => {
-                console.log(err)
-                res.json({
-                    code: 'FAILED',
-                    msg: err
-                })
-            })
-    }
-})
-router.delete('/theaters/:id', adminJwtMiddleware, (req, res) => {
-    Theater.destroy({
-        where: {
-            id: parseInt(req.params.id)
-        }
-    }).then(() => {
-        res.json({
-            code: 'OK'
-        })
-    }).catch(err => {
-        console.log(err)
-        res.json({
-            code: 'FAILED',
-            msg: err
-        })
-    })
-})
 
 //---------------------------------------- users --------------------------------------------//
 // admin

@@ -1,4 +1,5 @@
 import React from 'react'
+import { isArray } from 'util';
 
 export class ClickableView extends React.Component {
     render() {
@@ -24,7 +25,14 @@ export class ClickableTableCells extends React.Component {
     render() {
         return (
             <React.Fragment>
-                {this.props.children.map((v, i) => {
+                {this.props.children.map(v => {
+                    if (v.type === React.Fragment && isArray(v.props.children)) {
+                        return [...v.props.children]
+                    }
+                    return [v]
+                }).reduce((prev, cur) => {
+                    return prev.concat(cur)
+                }, []).map((v, i) => {
                     return (
                         <td onClick={this.props.onClick} key={i}>{v}</td>
                     )

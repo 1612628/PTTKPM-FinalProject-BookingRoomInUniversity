@@ -25,5 +25,5 @@ export const actions = {
 
     // done
     LOADING_BUILDING_CHOICES_NORMAL: 'loading building choices normal',
-    SET_BUILDING_CHOICES_NORMAL: 'loading building choices normal',
+    SET_BUILDING_CHOICES_NORMAL: 'set building choices normal',
 }
