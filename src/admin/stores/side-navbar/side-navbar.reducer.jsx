@@ -15,9 +15,9 @@ const initState = {
                 text: 'Tai khoan',
                 iconName: 'user'
             },
-            [routes.THEATER.id]: {
-                href: routes.THEATER.path,
-                text: 'Rap',
+            [routes.ROOM.id]: {
+                href: routes.ROOM.path,
+                text: 'Phong hoc',
                 iconName: 'warehouse'
             },
             [routes.TICKET.id]: {

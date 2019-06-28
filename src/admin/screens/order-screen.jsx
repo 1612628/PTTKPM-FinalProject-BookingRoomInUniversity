@@ -9,7 +9,7 @@ import { loadTheaterChoices } from '../stores/dashboard/dashboard.action'
 import { loadContent, loadOrders, uploadOrder, removeOrder } from '../stores/orders/orders.action'
 import { loadDevices } from '../stores/devices/devices.action'
 import { loadTickets } from '../stores/tickets/tickets.action'
-import { loadTheaters } from '../stores/theaters/theaters.action'
+import { loadRooms } from '../stores/rooms/rooms.action'
 import { InlineClickableView, ClickableTableCells } from '../components/common/clickable-view';
 import { NigamonIcon } from '../components/common/nigamon-icon';
 
@@ -494,7 +494,7 @@ const mapDispatchToProps = dispatch => {
         loadTheaterChoices: () => dispatch(loadTheaterChoices()),
         loadAvailableFoods: () => dispatch(loadDevices(0)),
         loadAvailableTickets: () => dispatch(loadTickets(0)),
-        loadAvailableTheaters: () => dispatch(loadTheaters(0)),
+        loadAvailableTheaters: () => dispatch(loadRooms(0)),
         uploadOrder: (order, addNew) => dispatch(uploadOrder(order, addNew)),
     }
 }

@@ -11,10 +11,11 @@ const LIMIT = 5;
 const {
     Sequelize,
     tai_khoan,
-    quan_tri_vien
+    quan_tri_vien,
+    thanh_vien,
+    thiet_bi,
+    quan_ly_thiet_bi
 } = require("../models");
-
-console.log()
 
 //---------------------------------- jwt middleware ------------------------------------//
 const adminJwtMiddleware = (req, res, next) => {
@@ -24,8 +25,10 @@ const adminJwtMiddleware = (req, res, next) => {
                 res.status(401).send('Unauthorized Access')
             } else {
                 jwt.sign({
-                    name: decoded.name,
-                    lastLogin: decoded.lastLogin,
+                    username: decoded.username,
+                    fullname: decoded.fullname,
+                    cmnd: decoded.cmnd,
+                    phone: decoded.phone,
                     email: decoded.email
                 }, secretKey, {
                         expiresIn: "2h"
@@ -49,7 +52,6 @@ const adminJwtMiddleware = (req, res, next) => {
 router.post('/login', (req, res) => {
     tai_khoan.findOne({ where: { ten_dang_nhap: req.body.username } })
         .then(user => {
-            console.log(user)
             return quan_tri_vien.findByPk(user.id)
                 .then(admin => user)
                 .catch(err => {
@@ -97,10 +99,10 @@ router.get('/login', adminJwtMiddleware, (req, res) => {
         isLogin: true,
         userInfo: {
             username: decoded.username,
-            fullname: user.fullname,
-            cmnd: user.cmnd,
-            phone: user.phone,
-            email: user.email
+            fullname: decoded.fullname,
+            cmnd: decoded.cmnd,
+            phone: decoded.phone,
+            email: decoded.email
         }
     })
 })
@@ -424,7 +426,7 @@ router.get('/dashboard/charts', adminJwtMiddleware, (req, res) => {
 })
 
 //------------------------------------ theaters ---------------------------------------------//
-router.get('/theaters/status', adminJwtMiddleware, (req, res) => {
+router.get('/rooms/status', adminJwtMiddleware, (req, res) => {
     TheaterStatus.findAndCountAll({
     }).then(result => {
         const status = (result.rows.map(r => r.dataValues).map(r => ({
@@ -664,116 +666,66 @@ router.delete('/theaters/:id', adminJwtMiddleware, (req, res) => {
     })
 })
 
-//---------------------------------------- movies --------------------------------------------//
-router.get('/movies/genres', adminJwtMiddleware, (req, res) => {
-    MovieGenre.findAndCountAll({
-    }).then(result => {
-        const types = (result.rows.map(r => r.dataValues).map(r => ({
-            id: r.id,
-            label: r.name,
-        })))
-        res.json({
-            choices: types
-        })
-    }).catch(err => {
-        res.status(500).send('GET Movie Genres Error')
-    })
-})
-router.get('/movies', adminJwtMiddleware, (req, res) => {
-    console.log('movies')
+//---------------------------------------- users --------------------------------------------//
+// admin
+router.get('/users/admins', adminJwtMiddleware, (req, res) => {
+    console.log('admins')
     const query = req.query
     const page = parseInt(query.page || 0)
-    const genre = parseInt(query.genre || '0')
-    const status = query.status
     const searchText = query.searchText
 
-    const getStatusWhere = (status) => {
-        switch (status) {
-            case 'coming': {
-                return {
-                    startDate: { [Op.gt]: new Date() },
-                }
-            }
-            case 'showing': {
-                return {
-                    startDate: {
-                        [Op.or]: [
-                            { [Op.eq]: null },
-                            { [Op.lte]: new Date() }
-                        ]
-                    },
-                    endDate: {
-                        [Op.or]: [
-                            { [Op.eq]: null },
-                            { [Op.gte]: new Date() }
-                        ]
-                    }
-                }
-            }
-            case 'passed': {
-                return {
-                    endDate: { [Op.lt]: new Date() },
-                }
-            }
-            default: {
-                return {}
-            }
-        }
-    }
-
-    Movie.findAndCountAll({
-        where: {
-            ...(genre ? { movieGenreId: genre } : {}),
-            ...getStatusWhere(status)
-        },
+    quan_tri_vien.findAndCountAll({
         ...(page ? ({
             limit: LIMIT,
             offset: LIMIT * (page - 1),
             order: [['updatedAt', 'DESC']],
         }) : {})
     }).then(result => {
-        const movies = (result.rows.map(r => r.dataValues).map(r => ({
-            id: r.id,
-            name: r.name,
-            actor: r.actor,
-            director: r.director,
-            type: r.movieGenreId,
-            length: 180,
-            start: r.startDate,
-            end: r.endDate,
-            intro: r.introduce,
-            imageUrl: r.photoUrl
-        })))
-        res.json({
-            movies: movies,
-            currentPage: page,
-            lastPage: Math.ceil(result.count / LIMIT),
-            total: result.count
+        Promise.all(result.rows.map(r => r.dataValues).map(async r => {
+            return tai_khoan.findByPk(r.ma_quan_tri)
+                .then(user => ({
+                    id: r.ma_quan_tri,
+                    username: user.ten_dang_nhap,
+                    fullname: user.ho_va_ten,
+                    cmnd: user.cmnd,
+                    phone: user.sdt,
+                    email: user.email,
+                    department: r.phong_ban
+                }))
+        })).then(admins => {
+            res.json({
+                admins: admins,
+                currentPage: page,
+                lastPage: Math.ceil(result.count / LIMIT),
+                total: result.count
+            })
         })
     }).catch(err => {
-        res.status(500).send('GET Movies Error')
+        res.status(500).send('GET Admins Error')
     })
 })
-router.post('/movies/:id', adminJwtMiddleware, (req, res) => {
+router.post('/users/admins/:id', adminJwtMiddleware, (req, res) => {
     const add = req.query.addNew || false
-    const movie = req.body
-    if (parseInt(req.params.id) !== parseInt(movie.id)) {
+    const admin = req.body
+    if (!add && parseInt(req.params.id) !== parseInt(admin.id)) {
         return res.json({
             code: 'FAILED',
             msg: 'Mismatch ID'
         })
     }
     if (add) {
-        Movie.create({
-            id: movie.id,
-            name: movie.name,
-            actor: movie.actor,
-            director: movie.director,
-            startDate: movie.start && new Date(movie.start),
-            endDate: movie.end && new Date(movie.end),
-            introduce: movie.intro,
-            imageUrl: movie.imageUrl,
-            movieGenreId: movie.type
+        tai_khoan.create({
+            ten_dang_nhap: admin.username,
+            mat_khau: admin.password,
+            ho_va_ten: admin.fullname,
+            cmnd: admin.cmnd,
+            sdt: admin.phone,
+            email: admin.email
+        }).then(user => {
+            return quan_tri_vien.create({
+                ma_quan_tri: user.ma_tai_khoan,
+                phong_ban: admin.department
+            })
         }).then(() => {
             res.json({ code: 'OK' })
         }).catch(err => {
@@ -784,19 +736,25 @@ router.post('/movies/:id', adminJwtMiddleware, (req, res) => {
             })
         })
     } else {
-        Movie.update({
-            name: movie.name,
-            actor: movie.actor,
-            director: movie.director,
-            startDate: movie.start && new Date(movie.start),
-            endDate: movie.end && new Date(movie.end),
-            introduce: movie.intro,
-            imageUrl: movie.imageUrl,
-            movieGenreId: movie.type
+        tai_khoan.update({
+            ten_dang_nhap: admin.username,
+            mat_khau: admin.password,
+            ho_va_ten: admin.fullname,
+            cmnd: admin.cmnd,
+            sdt: admin.phone,
+            email: admin.email
         }, {
                 where: {
-                    id: movie.id
+                    ma_tai_khoan: admin.id
                 }
+            }).then(user => {
+                return quan_tri_vien.update({
+                    phong_ban: admin.department
+                }, {
+                        where: {
+                            ma_quan_tri: admin.id
+                        }
+                    })
             }).then(() => {
                 res.json({
                     code: 'OK'
@@ -810,22 +768,106 @@ router.post('/movies/:id', adminJwtMiddleware, (req, res) => {
             })
     }
 })
-router.delete('/movies/:id', adminJwtMiddleware, (req, res) => {
-    Movie.destroy({
-        where: {
-            id: parseInt(req.params.id)
-        }
-    }).then(() => {
-        res.json({
-            code: 'OK'
+// member
+router.get('/users/members', adminJwtMiddleware, (req, res) => {
+    console.log('members')
+    const query = req.query
+    const page = parseInt(query.page || 0)
+    const searchText = query.searchText
+
+    thanh_vien.findAndCountAll({
+        ...(page ? ({
+            limit: LIMIT,
+            offset: LIMIT * (page - 1),
+            order: [['updatedAt', 'DESC']],
+        }) : {})
+    }).then(result => {
+        Promise.all(result.rows.map(r => r.dataValues).map(async r => {
+            return tai_khoan.findByPk(r.ma_thanh_vien)
+                .then(user => ({
+                    id: r.ma_thanh_vien,
+                    username: user.ten_dang_nhap,
+                    fullname: user.ho_va_ten,
+                    cmnd: user.cmnd,
+                    phone: user.sdt,
+                    email: user.email,
+                    point: r.diem_ca_nhan
+                }))
+        })).then(members => {
+            res.json({
+                members: members,
+                currentPage: page,
+                lastPage: Math.ceil(result.count / LIMIT),
+                total: result.count
+            })
         })
     }).catch(err => {
-        console.log(err)
-        res.json({
-            code: 'FAILED',
-            msg: err
-        })
+        res.status(500).send('GET Admins Error')
     })
+})
+router.post('/users/members/:id', adminJwtMiddleware, (req, res) => {
+    const add = req.query.addNew || false
+    const member = req.body
+    if (!add && parseInt(req.params.id) !== parseInt(member.id)) {
+        return res.json({
+            code: 'FAILED',
+            msg: 'Mismatch ID'
+        })
+    }
+    if (add) {
+        tai_khoan.create({
+            ten_dang_nhap: member.username,
+            mat_khau: member.password,
+            ho_va_ten: member.fullname,
+            cmnd: member.cmnd,
+            sdt: member.phone,
+            email: member.email
+        }).then(user => {
+            return thanh_vien.create({
+                ma_thanh_vien: user.ma_tai_khoan,
+                diem_ca_nhan: member.point
+            })
+        }).then(() => {
+            res.json({ code: 'OK' })
+        }).catch(err => {
+            console.log(err)
+            res.json({
+                code: 'FAILED',
+                msg: err
+            })
+        })
+    } else {
+        tai_khoan.update({
+            ten_dang_nhap: member.username,
+            mat_khau: member.password,
+            ho_va_ten: member.fullname,
+            cmnd: member.cmnd,
+            sdt: member.phone,
+            email: member.email
+        }, {
+                where: {
+                    ma_tai_khoan: member.id
+                }
+            }).then(user => {
+                return quan_tri_vien.update({
+                    diem_ca_nhan: member.point
+                }, {
+                        where: {
+                            ma_thanh_vien: member.id
+                        }
+                    })
+            }).then(() => {
+                res.json({
+                    code: 'OK'
+                })
+            }).catch(err => {
+                console.log(err)
+                res.json({
+                    code: 'FAILED',
+                    msg: err
+                })
+            })
+    }
 })
 
 //------------------------------------------- tickets -------------------------------------//
@@ -922,78 +964,43 @@ router.post('/tickets/:id', adminJwtMiddleware, (req, res) => {
             })
     }
 })
-router.delete('/tickets/:id', adminJwtMiddleware, (req, res) => {
-    TicketType.destroy({
-        where: {
-            id: parseInt(req.params.id)
-        }
-    }).then(() => {
-        res.json({
-            code: 'OK'
-        })
-    }).catch(err => {
-        console.log(err)
-        res.json({
-            code: 'FAILED',
-            msg: err
-        })
-    })
-})
 
-//----------------------------------------- foods ---------------------------------------------//
-router.get('/foods/status', adminJwtMiddleware, (req, res) => {
-    console.log('food status')
-    FoodStatus.findAndCountAll({
-    }).then(result => {
-        const types = (result.rows.map(r => r.dataValues).map(r => ({
-            id: r.id,
-            label: r.name,
-        })))
-        res.json({
-            choices: types
-        })
-    }).catch(err => {
-        res.status(500).send('GET Food Status Error')
-    })
-})
-router.get('/foods', adminJwtMiddleware, (req, res) => {
-    console.log('foods')
+//----------------------------------------- devices ---------------------------------------------//
+router.get('/devices', adminJwtMiddleware, (req, res) => {
+    console.log('devices')
     const query = req.query
     const page = parseInt(query.page || 0)
-    const status = parseInt(query.status || 0)
     const searchText = query.searchText
 
-    Food.findAndCountAll({
-        where: {
-            ...(status ? { foodStatusId: status } : {})
-        },
+    thiet_bi.findAndCountAll({
         ...(page ? ({
             limit: LIMIT,
             offset: LIMIT * (page - 1),
             order: [['updatedAt', 'DESC']],
         }) : {})
     }).then(result => {
-        const foods = (result.rows.map(r => r.dataValues).map(r => ({
-            id: r.id,
-            name: r.name,
-            price: r.price,
-            status: r.foodStatusId
+        const devices = (result.rows.map(r => r.dataValues).map(r => ({
+            id: r.ma_thiet_bi,
+            name: r.ten_thiet_bi,
+            date: r.ngay_san_xuat,
+            company: r.hang_san_xuat,
+            price: r.don_gia
         })))
         res.json({
-            foods: foods,
+            devices: devices,
             currentPage: page,
             lastPage: Math.ceil(result.count / LIMIT),
             total: result.count
         })
     }).catch(err => {
-        res.status(500).send('GET Tickets Error')
+        res.status(500).send('GET Devices Error')
     })
 })
-router.post('/foods/:id', adminJwtMiddleware, (req, res) => {
+router.post('/devices/:id', adminJwtMiddleware, (req, res) => {
     const add = req.query.addNew || false
-    const food = req.body
+    const device = req.body
 
-    if (parseInt(req.params.id) !== parseInt(food.id)) {
+    if (add && parseInt(req.params.id) !== parseInt(device.id)) {
         return res.json({
             code: 'FAILED',
             msg: 'Mismatch ID'
@@ -1001,11 +1008,11 @@ router.post('/foods/:id', adminJwtMiddleware, (req, res) => {
     }
 
     if (add) {
-        Food.create({
-            id: food.id,
-            name: food.name,
-            price: food.price,
-            foodStatusId: food.status
+        thiet_bi.create({
+            ten_thiet_bi: device.name,
+            ngay_san_xuat: new Date(device.date),
+            hang_san_xuat: device.company,
+            don_gia: device.price,
         }).then(() => {
             res.json({ code: 'OK' })
         }).catch(err => {
@@ -1016,13 +1023,14 @@ router.post('/foods/:id', adminJwtMiddleware, (req, res) => {
             })
         })
     } else {
-        Food.update({
-            name: food.name,
-            price: food.price,
-            foodStatusId: food.status
+        thiet_bi.update({
+            ten_thiet_bi: device.name,
+            ngay_san_xuat: new Date(device.date),
+            hang_san_xuat: device.company,
+            don_gia: device.price,
         }, {
                 where: {
-                    id: food.id
+                    ma_thiet_bi: device.id
                 }
             }).then(() => {
                 res.json({
@@ -1036,23 +1044,6 @@ router.post('/foods/:id', adminJwtMiddleware, (req, res) => {
                 })
             })
     }
-})
-router.delete('/foods/:id', adminJwtMiddleware, (req, res) => {
-    Food.destroy({
-        where: {
-            id: parseInt(req.params.id)
-        }
-    }).then(() => {
-        res.json({
-            code: 'OK'
-        })
-    }).catch(err => {
-        console.log(err)
-        res.json({
-            code: 'FAILED',
-            msg: err
-        })
-    })
 })
 
 //---------------------------------------- orders --------------------------------//

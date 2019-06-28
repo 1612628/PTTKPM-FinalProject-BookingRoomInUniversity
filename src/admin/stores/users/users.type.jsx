@@ -1,4 +1,7 @@
 export const actions = {
-    LOADING_USERS: 'LOADING_USERS',
-    SET_USERS: 'SET_USERS',
+    LOADING_ADMINS: 'loading admins',
+    SET_ADMINS: 'set admins',
+
+    LOADING_MEMBERS: 'loading members',
+    SET_MEMBERS: 'set members',
 }

@@ -17,6 +17,7 @@ export class RemoteDataListContainer extends React.Component {
         }
         return (
             <ListContainer
+                className={this.props.className}
                 isLoading={isLoading}
                 isFailed={isFailed}
                 error={data.error}

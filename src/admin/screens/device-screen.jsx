@@ -92,7 +92,6 @@ class DeviceScreen extends React.Component {
 
     validate(cb) {
         return (txt) => {
-            $(this.newForm).validate(validationRules);
             $(this.newForm).valid()
             cb(txt)
         }
@@ -180,7 +179,7 @@ class DeviceScreen extends React.Component {
                             }}>
                                 <div className="text-center">{item.id}</div>
                                 <div>{item.name}</div>
-                                <div className="text-center">{item.date}</div>
+                                <div className="text-center">{formatDate(item.date)}</div>
                                 <div>{item.company}</div>
                                 <div className="text-right">{item.price}</div>
                             </ClickableTableCells>
@@ -191,13 +190,13 @@ class DeviceScreen extends React.Component {
                                 }}>
                                     <NigamonIcon name='cog' />
                                 </InlineClickableView>
-                                /
+                                {/* /
                                 <InlineClickableView onClick={() => {
                                     this.setState({ newItem: item })
                                     this.openModal(ModalState.REMOVE)
                                 }}>
                                     <NigamonIcon name='times' />
-                                </InlineClickableView>
+                                </InlineClickableView> */}
                             </td>
                         </tr>
                     )
@@ -237,7 +236,10 @@ class DeviceScreen extends React.Component {
     renderEditForm(addNew) {
         let { newItem } = this.state
         return (
-            <form ref={ref => this.newForm = ref}>
+            <form ref={ref => {
+                this.newForm = ref
+                $(this.newForm).validate(validationRules);
+            }}>
                 <FormInput label='Ma thiet bi' disabled={!addNew} value={newItem.id}
                     name='deviceId'
                     onChange={this.validate((text) => {
@@ -251,7 +253,7 @@ class DeviceScreen extends React.Component {
                 <FormInput label='Hang san xuat' disabled={false} value={newItem.company}
                     name='deviceCompany'
                     onChange={this.validate((text) => {
-                        this.setState({ newItem: { ...newItem, name: text } })
+                        this.setState({ newItem: { ...newItem, company: text } })
                     })} />
                 <FormDatePicker label='Ngay san xuat' disabled={false} value={this.state.newItem.date}
                     name='deviceDate'
@@ -296,19 +298,19 @@ class DeviceScreen extends React.Component {
                 editCallback={() => {
                     if ($(this.newForm).valid()) {
                         this.props.uploadDevice(this.state.newItem)
-                        this.setState({ modalOpen: false, newItem: { ...nullItem } })
+                        this.setState({ modalOpen: false }, () => this.setState({ newItem: { ...nullItem } }))
                     }
                 }}
                 newCallback={() => {
                     if ($(this.newForm).valid()) {
                         this.props.uploadDevice(this.state.newItem, true)
-                        this.setState({ modalOpen: false, newItem: { ...nullItem } })
+                        this.setState({ modalOpen: false }, () => this.setState({ newItem: { ...nullItem } }))
                     }
                 }}
                 removeCallback={() => {
                     if ($(this.newForm).valid()) {
                         this.props.removeDevice(this.state.newItem)
-                        this.setState({ modalOpen: false, newItem: { ...nullItem } })
+                        this.setState({ modalOpen: false }, () => this.setState({ newItem: { ...nullItem } }))
                     }
                 }}
             />

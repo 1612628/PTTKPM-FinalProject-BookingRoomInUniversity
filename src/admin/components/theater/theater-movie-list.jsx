@@ -10,9 +10,9 @@ import { RemoteLoader } from '../common/remote-loader';
 import { FormInput, FormSelect, FormDatePicker, FormTimePicker } from '../common/form'
 import { buildErrorTooltip } from '../common/error-tooltip';
 import { RemoteDataModal, ModalState } from '../common/modal';
-import { loadUsers } from '../../stores/users/users.action'
+import { loadAdmins } from '../../stores/users/users.action'
 import { loadTickets } from '../../stores/tickets/tickets.action'
-import { loadShowTimes, uploadShowTime, removeShowTime } from '../../stores/theaters/theaters.action'
+import { loadLectureTimes, uploadLectureTime, removeShowTime } from '../../stores/rooms/rooms.action'
 import { GridPicker } from '../common/grid-picker';
 
 const validationRules = {
@@ -302,10 +302,10 @@ const mapStateToProps = state => {
 }
 const mapDispatchToProps = dispatch => {
     return {
-        loadAvailableMovies: (date) => dispatch(loadUsers(0, { date: date })),
+        loadAvailableMovies: (date) => dispatch(loadAdmins(0, { date: date })),
         loadAvailableTickets: () => dispatch(loadTickets(0)),
-        loadShowTimes: (theater, date) => dispatch(loadShowTimes(theater, date)),
-        uploadShowTime: (theater, date, showTime, addNew) => dispatch(uploadShowTime(theater, date, showTime, addNew)),
+        loadShowTimes: (theater, date) => dispatch(loadLectureTimes(theater, date)),
+        uploadShowTime: (theater, date, showTime, addNew) => dispatch(uploadLectureTime(theater, date, showTime, addNew)),
         removeShowTime: (theater, date, showTime) => dispatch(removeShowTime(theater, date, showTime))
     }
 }

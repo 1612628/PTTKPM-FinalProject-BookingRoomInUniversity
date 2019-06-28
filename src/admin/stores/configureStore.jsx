@@ -4,7 +4,7 @@ import sideNavbarReducer from './side-navbar/side-navbar.reducer'
 import appStateReducer from './app-state/app-state.reducer'
 import dashboardReducer from './dashboard/dashboard.reducer'
 import usersReducer from './users/users.reducer'
-import theatersReducer from './theaters/theaters.reducer'
+import roomsReducer from './rooms/rooms.reducer'
 import ticketsReducer from './tickets/tickets.reducer'
 import devicesReducer from './devices/devices.reducer'
 import orderReducer from './orders/orders.reducer'
@@ -14,7 +14,7 @@ const rootReducer = combineReducers({
     appState: appStateReducer,
     dashboard: dashboardReducer,
     users: usersReducer,
-    theaters: theatersReducer,
+    rooms: roomsReducer,
     tickets: ticketsReducer,
     devices: devicesReducer,
     orders: orderReducer,

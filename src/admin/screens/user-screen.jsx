@@ -5,7 +5,7 @@ import { FullHeader } from '../components/header/full-header'
 import { routes } from '../routes';
 import { RemoteDataListContainer } from '../components/common/remote-data-list-container'
 import { RemoteDropdown, Dropdown } from '../components/common/dropdown';
-import { loadContent, loadUsers, uploadUser, removeUser } from '../stores/users/users.action'
+import { loadContent, loadAdmins, uploadAdmin, removeAdmin, loadMembers, uploadMember, removeMember } from '../stores/users/users.action'
 import { InlineClickableView, ClickableTableCells } from '../components/common/clickable-view';
 import { NigamonIcon } from '../components/common/nigamon-icon';
 
@@ -13,6 +13,7 @@ import { RemoteDataModal, ModalState, Modal } from '../components/common/modal';
 import { FloatingButton } from '../components/common/floating-button';
 import { FormInput, FormSelect, FormDatePicker, FormTextArea, FormImageInput } from '../components/common/form';
 import { buildErrorTooltip } from '../components/common/error-tooltip';
+import { Button } from '../components/common/button';
 
 const MIN_INTERVAL = 500
 
@@ -72,7 +73,7 @@ const validationRules = {
     }
 }
 
-const nullItem = {
+const nullUser = {
     id: null,
     username: null,
     password: null,
@@ -80,22 +81,40 @@ const nullItem = {
     cmnd: null,
     phone: null,
     email: null,
-    type: 1,
+}
+const nullAdmin = {
+    ...nullUser,
     department: null,
+}
+const nullMember = {
+    ...nullUser,
     point: null,
 }
+const userTypes = [
+    { id: 1, label: 'quan tri vien' },
+    { id: 2, label: 'thanh vien' }
+]
+const defaultContainer = userTypes.map(t => t.id)
 class UserScreen extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            page: 1,
+            pageAdmin: 1,
+
+            pageMember: 1,
+
             searchText: '',
+            container: [...defaultContainer],
+            type: null,
             lastUpdate: new Date(),
             modalOpen: false,
             modalState: null,
             formErrors: null,
-            newItem: {
-                ...nullItem
+            newAdmin: {
+                ...nullAdmin
+            },
+            newMember: {
+                ...nullMember
             }
         }
         this.updateTimeout = null
@@ -110,19 +129,20 @@ class UserScreen extends React.Component {
         this.renderInfoForm = this.renderInfoForm.bind(this)
         this.renderModalBody = this.renderModalBody.bind(this)
 
-        this.renderFilters = this.renderFilters.bind(this)
-        this.renderUsersSection = this.renderUsersSection.bind(this)
+        this.renderAdminsSection = this.renderAdminsSection.bind(this)
+        this.renderMembersSection = this.renderMembersSection.bind(this)
+        this.renderUsersHeader = this.renderUsersHeader.bind(this)
+        this.renderUserItem = this.renderUserItem.bind(this)
         this.openModal = this.openModal.bind(this)
 
-        this.handleUserTypeChange = this.handleUserTypeChange.bind(this)
         this.handleSearchChange = this.handleSearchChange.bind(this)
         this.handleSearchSubmit = this.handleSearchSubmit.bind(this)
-        this.handlePageRequest = this.handlePageRequest.bind(this)
+        this.handleAdminPageRequest = this.handleAdminPageRequest.bind(this)
+        this.handleMemberPageRequest = this.handleMemberPageRequest.bind(this)
     }
 
     validate(cb) {
         return (txt) => {
-            $(this.newForm).validate(validationRules);
             $(this.newForm).valid()
             cb(txt)
         }
@@ -136,13 +156,6 @@ class UserScreen extends React.Component {
         this.setState({ ...nextState, lastUpdate: new Date() })
     }
 
-    handleUserTypeChange(type) {
-        this.customSetState({ type: type })
-        this.props.loadUsers(this.state.page, {
-            type: type,
-            searchText: this.state.searchText
-        })
-    }
     handleSearchChange(txt) {
         this.setState({ searchText: txt })
         if (this.updateTimeout) {
@@ -150,24 +163,50 @@ class UserScreen extends React.Component {
             this.updateTimeout = null
         }
         this.updateTimeout = setTimeout(() => {
-            this.props.loadUsers(this.state.page, {
-                type: this.state.type,
-                searchText: txt
-            })
+            if (!txt || txt === '') {
+                return this.setState({ container: [...defaultContainer] })
+            }
+            const lower = txt.toLowerCase()
+            const newContainer = userTypes.map(t => {
+                const words = t.label.split(' ').map(w => w.toLowerCase())
+                const length = words.filter(w => lower.includes(w)).length
+                return length ? { length: length, id: t.id } : null
+            }).filter(t => t !== null)
+
+            const exact = newContainer.filter(t => t.length === lower.split(' ').length).map(t => t.id)
+            if (exact.length > 0) {
+                return this.setState({ container: [...exact] })
+            }
+            this.setState({ container: [...newContainer.map(t => t.id)] })
         }, MIN_INTERVAL)
     }
     handleSearchSubmit(txt) {
         this.customSetState({ searchText: txt })
-        this.props.loadUsers(this.state.page, {
-            type: this.state.type,
-            searchText: txt
-        })
+        if (!txt || txt === '') {
+            return this.setState({ container: [...defaultContainer] })
+        }
+        const lower = txt.toLowerCase()
+        const newContainer = userTypes.map(t => {
+            const words = t.label.split(' ').map(w => w.toLowerCase())
+            const length = words.filter(w => lower.includes(w)).length
+            return length ? { length: length, id: t.id } : null
+        }).filter(t => t !== null)
 
+        const exact = newContainer.filter(t => t.length === lower.length).map(t => t.id)
+        if (exact.length > 0) {
+            return this.setState({ container: [...exact] })
+        }
+        this.setState({ container: [...newContainer.map(t => t.id)] })
     }
-    handlePageRequest(page) {
-        this.customSetState({ page: page })
-        this.props.loadUsers(page, {
-            type: this.state.type,
+    handleAdminPageRequest(page) {
+        this.customSetState({ pageAdmin: page })
+        this.props.loadAdmins(page, {
+            searchText: this.state.searchText
+        })
+    }
+    handleMemberPageRequest(page) {
+        this.customSetState({ pageMember: page })
+        this.props.loadMembers(page, {
             searchText: this.state.searchText
         })
     }
@@ -184,34 +223,15 @@ class UserScreen extends React.Component {
     renderContent() {
         return (
             <React.Fragment>
-                {this.renderFilters()}
-                {this.renderUsersSection()}
+                {this.renderAdminsSection()}
+                {this.renderMembersSection()}
                 {this.renderModals()}
             </React.Fragment>
         )
     }
 
-    renderFilters() {
+    renderUsersHeader(extra) {
         return (
-            <div className="row my-5 mx-0">
-                <Dropdown
-                    className='col-md-2'
-                    padding='px-3'
-                    defaultLabel='Loai tai khoan'
-                    onDefaultClick={() => this.handleUserTypeChange(0)}
-                    choices={[
-                        { label: 'Quan tri vien', id: 1 },
-                        { label: 'Thanh vien', id: 2 },
-                    ]}
-                    onChoiceClick={(c) => this.handleUserTypeChange(c.id)}
-                />
-            </div>
-        )
-    }
-
-    renderUsersSection() {
-        let { users } = this.props
-        let header = (
             <tr>
                 <td className="text-center">Ma tai khoan</td>
                 <td>Ten dang nhap</td>
@@ -219,68 +239,111 @@ class UserScreen extends React.Component {
                 <td className='text-center'>CMND</td>
                 <td className='text-center'>So dien thoai</td>
                 <td className="text-center">Email</td>
-                <td className="text-center">Loai tai khoan</td>
+                {extra}
             </tr>
         )
+    }
+    renderUserItem(item, extra, beforeOnClick) {
         return (
-            <RemoteDataListContainer
-                remoteData={users}
-                title='Tai khoan'
-                header={header}
-                renderItem={(item) => {
-                    let type = item.type === 1 ? ({
-                        label: 'Quan tri vien',
-                        color: 'text-danger'
-                    }) : ({
-                        label: 'Thanh vien',
-                        color: 'text-success'
-                    })
-                    return (
-                        <tr>
-                            <ClickableTableCells onClick={() => {
-                                this.setState({ newItem: item })
-                                this.openModal(ModalState.INFO)
-                            }}>
-                                <div className="text-center">{item.id}</div>
-                                <div>{item.username}</div>
-                                <div >{item.fullname}</div>
-                                <div className='text-center'>{item.cmnd}</div>
-                                <div className='text-center'>{item.phone}</div>
-                                <div className="text-center">{item.email}</div>
-                                <div className={`text-center ${type.color}`}>{type.label}</div>
-                            </ClickableTableCells>
-                            <td className="text-right">
-                                <InlineClickableView onClick={() => {
-                                    this.setState({ newItem: item })
-                                    this.openModal(ModalState.EDIT)
-                                }}>
-                                    <NigamonIcon name='cog' />
-                                </InlineClickableView>
-                                /
-                                <InlineClickableView onClick={() => {
-                                    this.setState({ newItem: item })
-                                    this.openModal(ModalState.REMOVE)
-                                }}>
-                                    <NigamonIcon name='times' />
-                                </InlineClickableView>
-                            </td>
-                        </tr>
-                    )
-                }}
-                onRequestPage={this.handlePageRequest}
-            />
+            <tr>
+                <ClickableTableCells onClick={() => {
+                    beforeOnClick()
+                    this.openModal(ModalState.INFO)
+                }}>
+                    <div className="text-center">{item.id}</div>
+                    <div>{item.username}</div>
+                    <div >{item.fullname}</div>
+                    <div className='text-center'>{item.cmnd}</div>
+                    <div className='text-center'>{item.phone}</div>
+                    <div className="text-center">{item.email}</div>
+                    {extra}
+                </ClickableTableCells>
+                <td className="text-right">
+                    <InlineClickableView onClick={() => {
+                        beforeOnClick()
+                        this.openModal(ModalState.EDIT)
+                    }}>
+                        <NigamonIcon name='cog' />
+                    </InlineClickableView>
+                    {/* /
+                    <InlineClickableView onClick={() => {
+                        beforeOnClick()
+                        this.openModal(ModalState.REMOVE)
+                    }}>
+                        <NigamonIcon name='times' />
+                    </InlineClickableView> */}
+                </td>
+            </tr>
         )
     }
 
-    renderFloatingButton() {
+    renderAdminsSection() {
+        if (!this.state.container.includes(1)) {
+            return null
+        }
+        let { admins } = this.props
+        let header = this.renderUsersHeader((
+            <td className='text-center'>Phong ban</td>
+        ))
         return (
-            <FloatingButton
-                onClick={() => {
-                    this.setState({ newItem: { ...nullItem } })
-                    this.openModal(ModalState.NEW)
-                }}
-                iconName='plus'
-            />
+            <React.Fragment >
+                <RemoteDataListContainer
+                    remoteData={admins}
+                    title='Quan tri vien'
+                    header={header}
+                    renderItem={(item) => {
+                        return this.renderUserItem(item, (
+                            <div className='text-center'>{item.department}</div>
+                        ), () => this.setState({ type: 1, newAdmin: item }))
+                    }}
+                    onRequestPage={this.handleAdminPageRequest}
+                />
+                <div className='d-flex justify-content-center'>
+                    <Button active={true} label='Them quan tri vien' onClick={() => {
+                        this.setState({
+                            type: 1,
+                            modalOpen: true,
+                            modalState: ModalState.NEW,
+                            newAdmin: { ...nullAdmin }
+                        })
+                    }} />
+                </div>
+            </React.Fragment>
+        )
+    }
+
+    renderMembersSection() {
+        if (!this.state.container.includes(2)) {
+            return null
+        }
+        let { members } = this.props
+        let header = this.renderUsersHeader((
+            <td className='text-center'>Diem ca nhan</td>
+        ))
+        return (
+            <React.Fragment >
+                <RemoteDataListContainer
+                    remoteData={members}
+                    title='Thanh vien'
+                    header={header}
+                    renderItem={(item) => {
+                        return this.renderUserItem(item, (
+                            <div class='text-center'>{item.point}</div>
+                        ), () => this.setState({ type: 2, newMember: item }))
+                    }}
+                    onRequestPage={this.handleMemberPageRequest}
+                />
+                <div className='d-flex justify-content-center'>
+                    <Button active={true} label='Them thanh vien' onClick={() => {
+                        this.setState({
+                            type: 2,
+                            modalOpen: true,
+                            modalState: ModalState.NEW,
+                            newMember: { ...nullMember }
+                        })
+                    }} />
+                </div>
+            </React.Fragment>
         )
     }
 
@@ -300,86 +363,124 @@ class UserScreen extends React.Component {
     }
 
     renderEditForm(addNew) {
-        let types = [
-            { id: 1, label: 'Quan tri vien' },
-            { id: 2, label: 'Thanh vien' }
-        ]
-        let { newItem } = this.state
-        if (!newItem.type) {
-            this.state.newItem.type = types[0].id
-        }
+        const type = this.state.type
+        let newItem = type === 1 ? this.state.newAdmin : this.state.newMember
+        const setState = (() => {
+            switch (type) {
+                case 1:
+                    return item => this.setState({ newAdmin: item })
+                case 2:
+                    return item => this.setState({ newMember: item })
+                default:
+                    return () => console.error('unknown user type')
+            }
+        })()
         return (
-            <form ref={ref => this.newForm = ref}>
-                <FormInput label='Ma tai khoan' disabled={!addNew} value={newItem.id}
+            <form ref={ref => {
+                this.newForm = ref
+                $(this.newForm).validate(validationRules);
+            }}>
+                {!addNew ? <FormInput label='Ma tai khoan' disabled={true} value={newItem.id}
                     name='userId'
                     onChange={this.validate((text) => {
-                        this.setState({ newItem: { ...newItem, id: text } })
-                    })} />
-                <FormInput label='Ten dang nhap' disabled={false} value={newItem.name}
+                        setState({ ...newItem, id: text })
+                    })} /> : null}
+                <FormInput label='Ten dang nhap' disabled={!addNew} value={newItem.username}
                     name='userUsername'
                     onChange={this.validate((text) => {
-                        this.setState({ newItem: { ...newItem, username: text } })
+                        setState({ ...newItem, username: text })
                     })} />
-                <FormInput label='Mat khau moi' disabled={false} value={newItem.password} type="password"
+                {addNew ? <FormInput label='Mat khau' disabled={false} value={newItem.password} type="password"
                     name='userPassword'
                     onChange={this.validate((text) => {
-                        this.setState({ newItem: { ...newItem, password: text } })
-                    })} />
+                        setState({ ...newItem, password: text })
+                    })} /> : null}
                 <FormInput label='Ho ten' disabled={false} value={newItem.fullname}
                     name='userFullname'
-                    onChange={(text) => {
-                        this.setState({ newItem: { ...newItem, fullname: text } })
-                    }} />
+                    onChange={this.validate((text) => {
+                        setState({ ...newItem, fullname: text })
+                    })} />
                 <FormInput label='CMND' disabled={false} value={newItem.cmnd}
                     name='userCmnd'
-                    onChange={(text) => {
-                        this.setState({ newItem: { ...newItem, cmnd: text } })
-                    }} />
+                    onChange={this.validate((text) => {
+                        setState({ ...newItem, cmnd: text })
+                    })} />
                 <FormInput label='So dien thoai' disabled={false} value={newItem.phone}
                     name='userPhone'
-                    onChange={(text) => {
-                        this.setState({ newItem: { ...newItem, phone: text } })
-                    }} />
-                <FormSelect label='Loai tai khoan' disabled={false} value={newItem.type} options={types}
-                    onChange={type => this.setState({ newItem: { ...newItem, type: type } })}
-                />
-                {newItem.type === 1 ?
-                    <FormInput label='Phong ban' disabled={false} value={newItem.adminDepartment}
+                    onChange={this.validate((text) => {
+                        setState({ ...newItem, phone: text })
+                    })} />
+                <FormInput label='Email' disabled={false} value={newItem.email}
+                    name='userPhone'
+                    onChange={this.validate((text) => {
+                        setState({ ...newItem, email: text })
+                    })} />
+                {type === 1 ?
+                    <FormInput label='Phong ban' disabled={false} value={newItem.department}
                         name='adminDepartment'
-                        onChange={(text) => {
-                            this.setState({ newItem: { ...newItem, adminDepartment: text } })
-                        }} /> : null}
-                {newItem.type === 2 ?
-                    <FormInput label='Diem ca nhan' disabled={false} value={newItem.memberPoint}
+                        onChange={this.validate((text) => {
+                            setState({ ...newItem, department: text })
+                        })} /> : null}
+                {type === 2 ?
+                    <FormInput label='Diem ca nhan' disabled={false} value={newItem.point}
                         name='memberPoint'
-                        onChange={(text) => {
-                            this.setState({ newItem: { ...newItem, memberPoint: text } })
-                        }} /> : null}
+                        onChange={this.validate((text) => {
+                            setState({ ...newItem, point: text })
+                        })} /> : null}
             </form>
         )
     }
 
     renderInfoForm(remove) {
-        let types = [
-            { id: 1, label: 'Quan tri vien' },
-            { id: 2, label: 'Thanh vien' }
-        ]
-        let { newItem } = this.state
+        const type = this.state.type
+        let newItem = type === 1 ? this.state.newAdmin : this.state.newMember
         return (
             <form ref={ref => this.newForm = ref}>
                 <FormInput label='Ma tai khoan' disabled={true} value={newItem.id} />
-                <FormInput label='Ten dang nhap' disabled={true} value={newItem.name} />
+                <FormInput label='Ten dang nhap' disabled={true} value={newItem.username} />
                 <FormInput label='Ho ten' disabled={true} value={newItem.fullname} />
                 <FormInput label='CMND' disabled={true} value={newItem.cmnd} />
                 <FormInput label='So dien thoai' disabled={true} value={newItem.phone} />
-                <FormSelect label='Loai tai khoan' disabled={true} value={newItem.type} options={types} />
-                {newItem.type === 1 ? <FormInput label='Phong ban' disabled={true} value={newItem.adminDepartment} /> : null}
-                {newItem.type === 2 ? <FormInput label='Diem ca nhan' disabled={true} value={newItem.memberPoint} /> : null}
+                <FormInput label='Email' disabled={true} value={newItem.email} />
+                {type === 1 ? <FormInput label='Phong ban' disabled={true} value={newItem.department} /> : null}
+                {type === 2 ? <FormInput label='Diem ca nhan' disabled={true} value={newItem.point} /> : null}
             </form>
         )
     }
 
     renderModals() {
+        const type = this.state.type
+        let newItem = type === 1 ? this.state.newAdmin : this.state.newMember
+        const setState = (() => {
+            switch (type) {
+                case 1:
+                    return () => this.setState({ modalOpen: false }, () => this.setState({ newAdmin: { ...nullAdmin } }))
+                case 2:
+                    return () => this.setState({ modalOpen: false }, () => this.setState({ newMember: { ...nullMember } }))
+                default:
+                    return () => console.error('unknown user type')
+            }
+        })()
+        const upload = (() => {
+            switch (type) {
+                case 1:
+                    return (item, addNew) => this.props.uploadAdmin(item, addNew)
+                case 2:
+                    return (item, addNew) => this.props.uploadMember(item, addNew)
+                default:
+                    return () => console.error('unknown user type')
+            }
+        })()
+        const remove = (() => {
+            switch (type) {
+                case 1:
+                    return item => this.props.removeAdmin(item)
+                case 2:
+                    return item => this.props.removeMember(item)
+                default:
+                    return () => console.error('unknown user type')
+            }
+        })()
         return (
             <RemoteDataModal
                 large={true}
@@ -395,20 +496,20 @@ class UserScreen extends React.Component {
                 onStateChange={s => this.setState({ modalState: s })}
                 editCallback={() => {
                     if ($(this.newForm).valid()) {
-                        this.props.uploadUser(this.state.newItem)
-                        this.setState({ modalOpen: false, newItem: { ...nullItem } })
+                        upload(newItem)
+                        setState()
                     }
                 }}
                 newCallback={() => {
                     if ($(this.newForm).valid()) {
-                        this.props.uploadUser(this.state.newItem, true)
-                        this.setState({ modalOpen: false, newItem: { ...nullItem } })
+                        upload(newItem, true)
+                        setState()
                     }
                 }}
                 removeCallback={() => {
                     if ($(this.newForm).valid()) {
-                        this.props.removeUser(this.state.newItem, true)
-                        this.setState({ modalOpen: false, newItem: { ...nullItem } })
+                        remove(newItem)
+                        setState()
                     }
                 }}
             />
@@ -430,15 +531,19 @@ class UserScreen extends React.Component {
 
 const mapStateToProps = state => {
     return {
-        users: state.users.users
+        members: state.users.members,
+        admins: state.users.admins
     }
 }
 const mapDispatchToProps = dispatch => {
     return {
         loadContent: () => dispatch(loadContent()),
-        loadUsers: (page, options) => dispatch(loadUsers(page, options)),
-        uploadUser: (item, addNew) => dispatch(uploadUser(item, addNew)),
-        removeUser: (item) => dispatch(removeUser(item))
+        loadAdmins: (page, options) => dispatch(loadAdmins(page, options)),
+        uploadAdmin: (item, addNew) => dispatch(uploadAdmin(item, addNew)),
+        removeAdmin: (item) => dispatch(removeAdmin(item)),
+        loadMembers: (page, options) => dispatch(loadMembers(page, options)),
+        uploadMember: (item, addNew) => dispatch(uploadMember(item, addNew)),
+        removeMember: (item) => dispatch(removeMember(item)),
     }
 }
 

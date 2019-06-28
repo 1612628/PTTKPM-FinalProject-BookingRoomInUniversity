@@ -1,0 +1,2 @@
+export const isLoading = page => remoteData => remoteData.isLoading || (remoteData.currentPage && remoteData.currentPage !== page)
+export const isFailed = remoteData => !remoteData.data || !remoteData.error

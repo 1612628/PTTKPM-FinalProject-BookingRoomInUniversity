@@ -11,8 +11,8 @@ import { FormInput, FormSelect, FormDatePicker } from '../common/form'
 import { buildErrorTooltip } from '../common/error-tooltip';
 import { RemoteDataModal, ModalState } from '../common/modal';
 import { loadTickets } from '../../stores/tickets/tickets.action';
-import { loadTheaters, loadShowTimes } from '../../stores/theaters/theaters.action';
-import { loadUsers } from '../../stores/users/users.action'
+import { loadRooms, loadLectureTimes } from '../../stores/rooms/rooms.action';
+import { loadAdmins } from '../../stores/users/users.action'
 import { OrderSeatPicker } from './order-seat-picker';
 import { uploadOrderTicket, removeOrderTicket } from '../../stores/orders/orders.action';
 
@@ -318,10 +318,10 @@ const mapStateToProps = state => {
 }
 const mapDispatchToProps = dispatch => {
     return {
-        loadAvailableMovies: () => dispatch(loadUsers(0)),
+        loadAvailableMovies: () => dispatch(loadAdmins(0)),
         loadAvailableTickets: () => dispatch(loadTickets(0)),
-        loadAvailableTheaters: () => dispatch(loadTheaters(0)),
-        loadShowTimes: (theater, date) => dispatch(loadShowTimes(theater, date)),
+        loadAvailableTheaters: () => dispatch(loadRooms(0)),
+        loadShowTimes: (theater, date) => dispatch(loadLectureTimes(theater, date)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(OrderTicketList)

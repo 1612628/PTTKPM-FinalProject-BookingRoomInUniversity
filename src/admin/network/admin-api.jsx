@@ -8,7 +8,7 @@ const BASE_URL = 'http://localhost:8080/admin/api'
 const JWT_TOKEN = 'NIGAMON_JWT_TOKEN'
 const apiClient = new ApiClient(BASE_URL)
 const secureApiClient = new SecureApiClient(BASE_URL, JWT_TOKEN, () => {
-    store.dispatch(logOut())
+    // store.dispatch(logOut())
 }).client
 
 
@@ -26,63 +26,42 @@ const fail = (err) => {
 }
 
 export default class AdminApi {
-    static login(email, password) {
-        if (email === 'test@dev.com' && password === 'test') {
-            return ok({
-                isLogin: true,
-                userInfo: {
-                    name: 'Nguyen Tran Hau',
-                    email: 'test@dev.com',
-                    password: 'somerandompassword',
-                    lastLogin: new Date('2019/05/06')
-                }
-            })
-        } else {
-            return ok({ isLogin: false })
-        }
+    static logout() {
+        localStorage.removeItem(JWT_TOKEN)
+    }
+    static login(username, password) {
+        return ok({
+            isLogin: true
+        })
+        // return apiClient.postJson('/login', { username, password })
+        //     .then(data => {
+        //         if (!data.isLogin) {
+        //             return data
+        //         }
+        //         localStorage.setItem(JWT_TOKEN, data.token)
+        //         return {
+        //             ...data,
+        //             userInfo: {
+        //                 ...data.userInfo,
+        //                 lastLogin: new Date()
+        //             }
+        //         }
+        //     })
     }
     static checkLogin() {
         return ok({
-            isLogin: true,
-            userInfo: {
-                name: 'Nguyen Tran Hau',
-                email: 'test@dev.com',
-                password: 'somerandompassword',
-                lastLogin: new Date('2019/05/06')
-            }
+            isLogin: true
         })
+        // return secureApiClient.getJson('/login')
+        //     .then(data => {
+        //         return {
+        //             ...data,
+        //             userInfo: {
+        //                 ...data.userInfo,
+        //             }
+        //         }
+        //     })
     }
-    // static logout() {
-    //     localStorage.removeItem(JWT_TOKEN)
-    // }
-    // static login(email, password) {
-    //     return apiClient.postJson('/login', { email, password })
-    //         .then(data => {
-    //             if (!data.isLogin) {
-    //                 return data
-    //             }
-    //             localStorage.setItem(JWT_TOKEN, data.token)
-    //             return {
-    //                 ...data,
-    //                 userInfo: {
-    //                     ...data.userInfo,
-    //                     lastLogin: data.userInfo.lastLogin && moment.utc(data.userInfo.lastLogin).toDate()
-    //                 }
-    //             }
-    //         })
-    // }
-    // static checkLogin() {
-    //     return secureApiClient.getJson('/login')
-    //         .then(data => {
-    //             return {
-    //                 ...data,
-    //                 userInfo: {
-    //                     ...data.userInfo,
-    //                     lastLogin: data.userInfo.lastLogin && moment.utc(data.userInfo.lastLogin).toDate()
-    //                 }
-    //             }
-    //         })
-    // }
 
     //--------------------- Dashboard ------------------------//
     static getDashboardMovies(page) {
@@ -157,38 +136,47 @@ export default class AdminApi {
     }
 
     //--------------------- Users ------------------------//
-    static getUsers(page, options) {
-        return secureApiClient.getJson('/users', {
+    // admin
+    static getAdmins(page, options) {
+        return secureApiClient.getJson('/users/admins', {
             params: {
                 page: page,
                 ...options
             }
-        }).then(data => {
-            return {
-                ...data,
-                movies: data.movies.map(m => {
-                    return {
-                        ...m,
-                        start: m.start && moment.utc(m.start).toDate(),
-                        end: m.end && moment.utc(m.end).toDate()
-                    }
-                })
+        })
+    }
+    static uploadAdmin(admin, addNew) {
+        return secureApiClient.postJson(`/users/admins/${admin.id}`, admin, { params: { addNew: addNew } })
+            .then(data => data)
+    }
+    static removeAdmin(admin) {
+        return secureApiClient.deleteJson(`/users/admins/${admin.id}`)
+    }
+    // member
+    static getMembers(page, options) {
+        return secureApiClient.getJson('/users/members', {
+            params: {
+                page: page,
+                ...options
             }
         })
     }
-    static uploadUser(user, addNew) {
-        return secureApiClient.postJson(`/users/${user.id}`, user, { params: { addNew: addNew } })
+    static uploadMember(member, addNew) {
+        return secureApiClient.postJson(`/users/members/${member.id}`, member, { params: { addNew: addNew } })
             .then(data => data)
     }
-    static removeUser(user) {
-        return secureApiClient.deleteJson(`/users/${user.id}`)
+    static removeMember(member) {
+        return secureApiClient.deleteJson(`/users/members/${member.id}`)
     }
     //--------------------- Theaters ------------------------//
-    static getTheaterStatusChoices() {
-        return secureApiClient.getJson('/theaters/status')
+    // status
+    static getRoomStatusChoices() {
+        return secureApiClient.getJson('/rooms/status')
     }
-    static getTheaters(page, options) {
-        return secureApiClient.getJson('/theaters', {
+
+    // normal
+    static getNormals(page, options) {
+        return secureApiClient.getJson('/rooms/normals', {
             params: {
                 page: page,
                 ...options
@@ -197,8 +185,28 @@ export default class AdminApi {
             return data
         })
     }
-    static getShowTimes(theater, date, options) {
-        return secureApiClient.getJson(`/theaters/${theater.id}/showtimes`, { params: { date: date } })
+    static uploadNormal(normal, addNew) {
+        return secureApiClient.postJson(`/rooms/normals/${normal.id}`, normal, { params: { addNew: addNew } })
+    }
+
+    // hall
+    static getHalls(page, options) {
+        return secureApiClient.getJson('/rooms/halls', {
+            params: {
+                page: page,
+                ...options
+            }
+        }).then(data => {
+            return data
+        })
+    }
+    static uploadHalls(hall, addNew) {
+        return secureApiClient.postJson(`/rooms/halls/${hall.id}`, hall, { params: { addNew: addNew } })
+    }
+
+    // lecture time
+    static getLectureTimes(room, date, options) {
+        return secureApiClient.getJson(`/rooms/${room.id}/lecture_times`, { params: { date: date } })
             .then(data => {
                 return {
                     showTimes: data.showTimes.map(s => ({
@@ -208,29 +216,15 @@ export default class AdminApi {
                 }
             })
     }
-
-    static uploadTheater(theater, addNew) {
-        return secureApiClient.postJson(`/theaters/${theater.id}`, theater, { params: { addNew: addNew } })
-    }
-    static removeTheater(theater) {
-        return secureApiClient.deleteJson(`/theaters/${theater.id}`)
-    }
-    static uploadShowTime(theater, date, showTime, addNew, options) {
+    static uploadLectureTime(room, date, lectureTime, addNew, options) {
         const data = {
-            ...showTime,
-            time: formatTime(showTime.time)
+            ...lectureTime,
+            time: formatTime(lectureTime.time)
         }
-        return secureApiClient.postJson(`/theaters/${theater.id}/showtimes`, data, {
+        return secureApiClient.postJson(`/rooms/${room.id}/lecture_times`, data, {
             params: {
                 date: date,
                 addNew: addNew
-            }
-        })
-    }
-    static removeShowTime(theater, date, showTime, options) {
-        return secureApiClient.deleteJson(`/theaters/${theater.id}/showtimes/${showTime.id}`, {
-            params: {
-                date: date,
             }
         })
     }
@@ -257,26 +251,29 @@ export default class AdminApi {
         return secureApiClient.deleteJson(`/tickets/${ticket.id}`)
     }
 
-    //--------------------- Foods ------------------------//
-    static getFoodStatusChoices() {
-        return secureApiClient.getJson('/foods/status')
-    }
-    static getFoods(page, options) {
-        return secureApiClient.getJson('/foods', {
+    //--------------------- Devices ------------------------//
+    static getDevices(page, options) {
+        return secureApiClient.getJson('/devices', {
             params: {
                 page: page,
                 ...options
             }
         }).then(data => {
-            return data
+            return {
+                ...data,
+                devices: data.devices.map(d => ({
+                    ...d,
+                    date: new Date(d.date)
+                }))
+            }
         })
     }
-    static uploadFood(food, addNew) {
-        return secureApiClient.postJson(`/foods/${food.id}`, food, { params: { addNew: addNew } })
+    static uploadDevice(device, addNew) {
+        return secureApiClient.postJson(`/devices/${device.id}`, device, { params: { addNew: addNew } })
             .then(data => data)
     }
-    static removeFood(food) {
-        return secureApiClient.deleteJson(`/foods/${food.id}`)
+    static removeDevice(device) {
+        return secureApiClient.deleteJson(`/devices/${device.id}`)
     }
 
     //--------------------- Orders ------------------------//

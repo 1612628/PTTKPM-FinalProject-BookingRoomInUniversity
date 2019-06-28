@@ -26,7 +26,7 @@ const setDevices = (data, err) => {
 export const loadDevices = (page, options) => {
     return (dispatch, getState) => {
         dispatch(loadingDevices(true))
-        AdminAPI.getFoods(page, options)
+        AdminAPI.getDevices(page, options)
             .then(data => {
                 if (data.devices) {
                     dispatch(setDevices(data, null))
@@ -44,7 +44,7 @@ export const loadDevices = (page, options) => {
 }
 export const uploadDevice = (item, addNew) => {
     return (dispatch, getState) => {
-        AdminAPI.uploadFood(item, addNew)
+        AdminAPI.uploadDevice(item, addNew)
             .then(data => {
                 switch (data.code) {
                     case codes.OK:
@@ -65,7 +65,7 @@ export const uploadDevice = (item, addNew) => {
 }
 export const removeDevice = (device) => {
     return (dispatch, getState) => {
-        AdminAPI.removeFood(device)
+        AdminAPI.removeDevice(device)
             .then(data => {
                 switch (data.code) {
                     case codes.OK:

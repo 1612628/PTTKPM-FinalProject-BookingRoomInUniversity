@@ -17,7 +17,7 @@ class LoginScreen extends React.Component {
 
     render() {
         if (this.props.isLogin) {
-            return <Redirect to={routes.DASHBOARD.path} />
+            return <Redirect to={routes.USER.path} />
         }
         let allowLogin = this.state.email !== '' && this.state.password !== ''
         return (

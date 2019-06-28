@@ -5,46 +5,47 @@ import { codes } from '../../network/message-codes';
 
 export const loadContent = () => {
     return (dispatch, getState) => {
-        dispatch(loadUsers(1))
+        dispatch(loadAdmins(1))
+        dispatch(loadMembers(1))
     }
 }
 
-// movies
-const loadingUsers = (loading) => {
+//---------------------------- admin ---------------------------------//
+const loadingAdmins = (loading) => {
     return {
-        type: actions.LOADING_USERS,
+        type: actions.LOADING_ADMINS,
         loading: loading
     }
 }
-const setUsers = (data, err) => {
+const setAdmins = (data, err) => {
     return {
-        type: actions.SET_USERS,
+        type: actions.SET_ADMINS,
         data: data,
         error: err
     }
 }
-export const loadUsers = (page, options) => {
+export const loadAdmins = (page, options) => {
     return (dispatch, getState) => {
-        dispatch(loadingUsers(true))
-        AdminAPI.getUsers(page, options)
+        dispatch(loadingAdmins(true))
+        AdminAPI.getAdmins(page, options)
             .then(data => {
-                if (data.users) {
-                    dispatch(setUsers(data, null))
-                    dispatch(loadingUsers(false))
+                if (data.admins) {
+                    dispatch(setAdmins(data, null))
+                    dispatch(loadingAdmins(false))
                 } else {
-                    dispatch(setUsers(null, 'no movies found'))
-                    dispatch(loadingUsers(false))
+                    dispatch(setAdmins(null, 'no admin found'))
+                    dispatch(loadingAdmins(false))
                 }
             })
             .catch(err => {
-                dispatch(setUsers(null, 'request timeout ' + err))
-                dispatch(loadingUsers(false))
+                dispatch(setAdmins(null, 'request timeout ' + err))
+                dispatch(loadingAdmins(false))
             })
     }
 }
-export const uploadUser = (user, addNew) => {
+export const uploadAdmin = (admin, addNew) => {
     return (dispatch, getState) => {
-        AdminAPI.uploadUser(user, addNew)
+        AdminAPI.uploadAdmin(admin, addNew)
             .then(data => {
                 switch (data.code) {
                     case codes.OK:
@@ -52,7 +53,7 @@ export const uploadUser = (user, addNew) => {
                             title: 'Thanh cong',
                             type: 'success',
                         }).then(() => {
-                            dispatch(loadUsers(1))
+                            dispatch(loadAdmins(1))
                         })
                     case codes.FAILED:
                         return Swal.fire({
@@ -63,9 +64,9 @@ export const uploadUser = (user, addNew) => {
             })
     }
 }
-export const removeUser = (user) => {
+export const removeAdmin = (admin) => {
     return (dispatch, getState) => {
-        AdminAPI.removeUser(user)
+        AdminAPI.removeAdmin(admin)
             .then(data => {
                 switch (data.code) {
                     case codes.OK:
@@ -73,7 +74,7 @@ export const removeUser = (user) => {
                             title: 'Thanh cong',
                             type: 'success',
                         }).then(() => {
-                            dispatch(loadUsers(1))
+                            dispatch(loadAdmins(1))
                         })
                     case codes.FAILED:
                         return Swal.fire({
@@ -85,36 +86,78 @@ export const removeUser = (user) => {
     }
 }
 
-// genre choices 
-const loadingGenreChoices = (loading) => {
+//---------------------------- member ---------------------------------//
+const loadingMembers = (loading) => {
     return {
-        type: actions.LOADING_GENRE_CHOICES,
+        type: actions.LOADING_MEMBERS,
         loading: loading
     }
 }
-const setGenreChoices = (data, err) => {
+const setMembers = (data, err) => {
     return {
-        type: actions.SET_GENRE_CHOICES,
+        type: actions.SET_MEMBERS,
         data: data,
         error: err
     }
 }
-export const loadGenreChoices = () => {
+export const loadMembers = (page, options) => {
     return (dispatch, getState) => {
-        dispatch(loadingGenreChoices(true))
-        AdminAPI.getGenreChoices()
+        dispatch(loadingMembers(true))
+        AdminAPI.getMembers(page, options)
             .then(data => {
-                if (data.choices) {
-                    dispatch(setGenreChoices(data, null))
-                    dispatch(loadingGenreChoices(false))
+                if (data.members) {
+                    dispatch(setMembers(data, null))
+                    dispatch(loadingMembers(false))
                 } else {
-                    dispatch(setGenreChoices(null, 'no choices found'))
-                    dispatch(loadingGenreChoices(false))
+                    dispatch(setMembers(null, 'no member found'))
+                    dispatch(loadingMembers(false))
                 }
             })
             .catch(err => {
-                dispatch(setGenreChoices(null, 'request timeout ' + err))
-                dispatch(loadingGenreChoices(false))
+                dispatch(setMembers(null, 'request timeout ' + err))
+                dispatch(loadingMembers(false))
+            })
+    }
+}
+export const uploadMember = (member, addNew) => {
+    return (dispatch, getState) => {
+        AdminAPI.uploadMember(member, addNew)
+            .then(data => {
+                switch (data.code) {
+                    case codes.OK:
+                        return Swal.fire({
+                            title: 'Thanh cong',
+                            type: 'success',
+                        }).then(() => {
+                            dispatch(loadMembers(1))
+                        })
+                    case codes.FAILED:
+                        return Swal.fire({
+                            title: 'Loi',
+                            type: 'error',
+                        }).then(() => { })
+                }
+            })
+    }
+}
+export const removeMember = (member) => {
+    return (dispatch, getState) => {
+        AdminAPI.removeMember(member)
+            .then(data => {
+                switch (data.code) {
+                    case codes.OK:
+                        return Swal.fire({
+                            title: 'Thanh cong',
+                            type: 'success',
+                        }).then(() => {
+                            dispatch(loadMembers(1))
+                        })
+                    case codes.FAILED:
+                        return Swal.fire({
+                            title: 'Loi',
+                            type: 'error',
+                        }).then(() => { })
+                }
             })
     }
 }

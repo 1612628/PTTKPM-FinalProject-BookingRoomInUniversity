@@ -7,9 +7,9 @@ export const routes = {
         id: 1,
         path: '/admin/user'
     },
-    THEATER: {
+    ROOM: {
         id: 2,
-        path: '/admin/theater'
+        path: '/admin/room'
     },
     TICKET: {
         id: 3,

@@ -10,6 +10,8 @@ require('pg').types.setTypeParser(1114, stringValue => {
 var models = require('./models');
 var db = require('./config/database.js');
 
+app.use(express.json())
+
 app.use(express.static(__dirname + '/public/'));
 
 
@@ -31,11 +33,11 @@ app.get('/laytatcathietbi', function (req, res) {
 const admin = require("./routes/admin");
 const adminApi = require("./routes/admin-api");
 
-app.get("/dist/*", (req, res, next) => {
-    req.url = req.url + '.gz';
-    res.set('Content-Encoding', 'gzip');
-    next();
-})
+// app.get("/dist/*", (req, res, next) => {
+//     req.url = req.url + '.gz';
+//     res.set('Content-Encoding', 'gzip');
+//     next();
+// })
 app.use("/dist", express.static("dist"));
 
 app.use("/admin/api", adminApi);
