@@ -193,6 +193,11 @@ export default class AdminApi {
         return secureApiClient.getJson('/rooms/status')
     }
 
+    // available devices
+    static getAvailableDevices(page) {
+        return secureApiClient.getJson('/devices', { params: { page: page } })
+    }
+
     // normal
     static getNormals(page, options) {
         return secureApiClient.getJson('/rooms/normals', {
@@ -247,26 +252,33 @@ export default class AdminApi {
         })
     }
 
-    //--------------------- Tickets ------------------------//
-    static getTicketStatusChoices() {
-        return secureApiClient.getJson('/tickets/status')
-    }
-    static getTickets(page, options) {
-        return secureApiClient.getJson('/tickets', {
+    // room device
+    static getRoomDevices(room, options) {
+        console.log(room)
+        return secureApiClient.getJson(`/rooms/${room.id}/devices`, {
             params: {
-                page: page,
                 ...options
             }
         }).then(data => {
-            return data
+            console.log(data)
+            return {
+                ...data,
+                devices: data.devices.map(d => ({
+                    ...d,
+                    date: new Date(d.date)
+                }))
+            }
         })
     }
-    static uploadTicket(ticket, addNew) {
-        return secureApiClient.postJson(`/tickets/${ticket.id}`, ticket, { params: { addNew: addNew } })
-            .then(data => data)
+    static uploadRoomDevice(room, device) {
+        return secureApiClient.postJson(`/rooms/${room.id}/devices/${device.id}`, device)
     }
-    static removeTicket(ticket) {
-        return secureApiClient.deleteJson(`/tickets/${ticket.id}`)
+    static removeRoomDevice(room, device) {
+        return secureApiClient.deleteJson(`/rooms/${room.id}/devices/${device.id}`)
+            .then(data => {
+                console.log(data)
+                return data
+            })
     }
 
     //--------------------- Devices ------------------------//
@@ -292,46 +304,5 @@ export default class AdminApi {
     }
     static removeDevice(device) {
         return secureApiClient.deleteJson(`/devices/${device.id}`)
-    }
-
-    //--------------------- Orders ------------------------//
-    static getOrderStatusChoices() {
-        return secureApiClient.getJson('/orders/status')
-    }
-    static getOrders(page, options) {
-        secureApiClient.postJson('/orders/1', {
-            id: 1,
-            username: 'a'
-        }, { params: { addNew: true } })
-        return secureApiClient.getJson('/orders', {
-            params: {
-                page: page,
-                ...options
-            }
-        }).then(data => {
-            return {
-                ...data,
-                orders: data.orders.map(o => {
-                    return {
-                        ...o,
-                        datetime: new Date(o.datetime),
-                        tickets: o.tickets.map(t => {
-                            return {
-                                ...t,
-                                date: new Date(t.date),
-                                time: parseTime(t.time)
-                            }
-                        })
-                    }
-                })
-            }
-        })
-    }
-    static uploadOrder(order, addNew) {
-        return secureApiClient.postJson(`/orders/${order.id}`, order, { params: { addNew: addNew } })
-            .then(data => data)
-    }
-    static removeOrder(order) {
-        return secureApiClient.deleteJson(`/orders/${order.id}`)
     }
 }

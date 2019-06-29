@@ -41,7 +41,20 @@ const initialState = {
         data: null,
         isLoading: true,
         error: null
-    }
+    },
+    roomDevices: {
+        data: null,
+        isLoading: true,
+        error: null
+    },
+    availableDevices: {
+        data: null,
+        isLoading: true,
+        error: null,
+        currentPage: 1,
+        lastPage: 1,
+        total: 0
+    },
 }
 
 const reducer = (state = initialState, action) => {
@@ -135,6 +148,53 @@ const reducer = (state = initialState, action) => {
                 lectureTimes: {
                     ...state.lectureTimes,
                     data: action.data ? action.data.lectureTimes : null,
+                    error: action.error,
+                }
+            }
+        }
+
+        // done
+        case actions.LOADING_AVAILABLE_DEVICES: {
+            return {
+                ...state,
+                availableDevices: {
+                    ...state.availableDevices,
+                    isLoading: action.loading
+                }
+            }
+        }
+        // done
+        case actions.SET_AVAILABLE_DEVICES: {
+            return {
+                ...state,
+                availableDevices: {
+                    ...state.availableDevices,
+                    data: action.data ? action.data.devices : null,
+                    error: action.error,
+                    currentPage: action.data ? action.data.currentPage : 1,
+                    lastPage: action.data ? action.data.lastPage : 1,
+                    total: action.data ? action.data.total : 1,
+                }
+            }
+        }
+
+        // done
+        case actions.LOADING_ROOM_DEVICES: {
+            return {
+                ...state,
+                roomDevices: {
+                    ...state.roomDevices,
+                    isLoading: action.loading
+                }
+            }
+        }
+        // done
+        case actions.SET_ROOM_DEVICES: {
+            return {
+                ...state,
+                roomDevices: {
+                    ...state.roomDevices,
+                    data: action.data ? action.data.devices : null,
                     error: action.error,
                 }
             }

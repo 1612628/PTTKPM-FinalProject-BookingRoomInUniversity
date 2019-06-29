@@ -124,7 +124,7 @@ export const uploadHall = (room, addNew) => {
     }
 }
 
-// show times
+// lecture times
 const loadingLectureTimes = (loading) => {
     return {
         type: actions.LOADING_LECTURE_TIMES,
@@ -168,6 +168,116 @@ export const uploadLectureTime = (room, date, lectureTime) => {
                             type: 'success',
                         }).then(() => {
                             dispatch(loadLectureTimes(room, date))
+                        })
+                    case codes.FAILED:
+                        return Swal.fire({
+                            title: 'Loi',
+                            type: 'error',
+                        }).then(() => { })
+                }
+            })
+    }
+}
+
+// available devices 
+const loadingAvailableDevices = (loading) => {
+    return {
+        type: actions.LOADING_AVAILABLE_DEVICES,
+        loading: loading
+    }
+}
+const setAvailableDevices = (data, err) => {
+    return {
+        type: actions.SET_AVAILABLE_DEVICES,
+        data: data,
+        error: err
+    }
+}
+export const loadAvailableDevices = (page, options) => {
+    return (dispatch, getState) => {
+        dispatch(loadingAvailableDevices(true))
+        AdminAPI.getDevices(page, options)
+            .then(data => {
+                if (data.devices) {
+                    dispatch(setAvailableDevices(data, null))
+                    dispatch(loadingAvailableDevices(false))
+                } else {
+                    dispatch(setAvailableDevices(null, 'no devices found'))
+                    dispatch(loadingAvailableDevices(false))
+                }
+            })
+            .catch(err => {
+                dispatch(setAvailableDevices(null, 'request timeout ' + err))
+                dispatch(loadingAvailableDevices(false))
+            })
+    }
+}
+
+// room devices 
+const loadingRoomDevices = (loading) => {
+    return {
+        type: actions.LOADING_ROOM_DEVICES,
+        loading: loading
+    }
+}
+const setRoomDevices = (data, err) => {
+    return {
+        type: actions.SET_ROOM_DEVICES,
+        data: data,
+        error: err
+    }
+}
+export const loadRoomDevices = (room, options) => {
+    return (dispatch, getState) => {
+        dispatch(loadingRoomDevices(true))
+        AdminAPI.getRoomDevices(room, options)
+            .then(data => {
+                if (data.devices) {
+                    dispatch(setRoomDevices(data, null))
+                    dispatch(loadingRoomDevices(false))
+                } else {
+                    dispatch(setRoomDevices(null, 'no devices found'))
+                    dispatch(loadingRoomDevices(false))
+                }
+            })
+            .catch(err => {
+                dispatch(setRoomDevices(null, 'request timeout ' + err))
+                dispatch(loadingRoomDevices(false))
+            })
+    }
+}
+export const uploadRoomDevice = (room, device) => {
+    return (dispatch, getState) => {
+        AdminAPI.uploadRoomDevice(room, device)
+            .then(data => {
+                switch (data.code) {
+                    case codes.OK:
+                        return Swal.fire({
+                            title: 'Thanh cong',
+                            type: 'success',
+                        }).then(() => {
+                            dispatch(loadRoomDevices(room))
+                        })
+                    case codes.FAILED:
+                        return Swal.fire({
+                            title: 'Loi',
+                            type: 'error',
+                        }).then(() => { })
+                }
+            })
+    }
+}
+export const removeRoomDevice = (room, device) => {
+    return (dispatch, getState) => {
+        AdminAPI.removeRoomDevice(room, device)
+            .then(data => {
+                switch (data.code) {
+                    case codes.OK:
+                        return Swal.fire({
+                            title: 'Thanh cong',
+                            type: 'success',
+                        }).then(() => {
+                            dispatch(loadRoomDevices(room))
                         })
                     case codes.FAILED:
                         return Swal.fire({

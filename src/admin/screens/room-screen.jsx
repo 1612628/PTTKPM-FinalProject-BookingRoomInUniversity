@@ -17,6 +17,7 @@ import { isLoading, isFailed } from '../libs/remote-data';
 import { getColorById } from '../libs/colors'
 import { Button } from '../components/common/button';
 import { RemoteLoader } from '../components/common/remote-loader';
+import DevicesList from '../components/room/room-devices-list';
 
 const MIN_INTERVAL = 500
 
@@ -562,6 +563,7 @@ class RoomScreen extends React.Component {
                 <FormInput label='Ten phong' disabled={true} value={newItem.name} />
                 <FormTextArea label='Mo ta' disabled={true} value={newItem.description} />
                 <FormInput label='Diem phong' disabled={true} value={newItem.point} />
+                <DevicesList room={newItem} disabled={true} />
                 <LectureTimeList room={newItem} disabled={true} />
                 <FormSelect label='Tinh trang' disabled={true} value={newItem.status} options={status} />
                 {renderExtra()}
@@ -684,6 +686,7 @@ class RoomScreen extends React.Component {
                     onChange={this.validate((text) => {
                         setState({ ...newItem, point: text })
                     })} />
+                {addNew ? null : <DevicesList room={newItem} disabled={false} />}
                 {addNew ? null : <LectureTimeList room={newItem} disabled={false} />}
                 <FormSelect label='Tinh trang' disabled={false} value={newItem.status} options={status}
                     onChange={status => setState({ ...newItem, status: parseInt(status) })}

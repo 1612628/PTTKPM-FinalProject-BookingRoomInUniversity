@@ -7,7 +7,7 @@ export class Logo extends React.Component {
         return (
             <div className="mr-2">
                 <Link href="#">
-                    <Image src="/img/brand-admin.svg" />
+                    <Image src="/img/logo-khtn.png" />
                 </Link>
             </div>
         )

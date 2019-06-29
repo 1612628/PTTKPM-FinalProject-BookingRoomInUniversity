@@ -24,7 +24,7 @@ class LoginScreen extends React.Component {
             <div className='container-fluid'>
                 <div className="row justify-content-center">
                     <div className="col-4">
-                        <img className="mb-4" src="/img/brand-admin.svg" alt="" width="100%" />
+                        <img className="mb-4" src="/img/logo-khtn.png" alt="" width="100%" />
                         <div className="h2 mb-5 font-weight-bold text-primary text-center">Dang nhap Admin</div>
                         {this.props.loginError ?
                             <div className="alert alert-danger alert-dismissible fade show py-3" role="alert">

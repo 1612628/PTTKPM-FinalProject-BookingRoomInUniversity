@@ -16,6 +16,14 @@ export const actions = {
     SET_LECTURE_TIMES: 'set lecture times',
 
     // done
+    LOADING_ROOM_DEVICES: 'loading room devices',
+    SET_ROOM_DEVICES: 'set room devices',
+
+    // done
+    LOADING_AVAILABLE_DEVICES: 'loading available devices',
+    SET_AVAILABLE_DEVICES: 'set availble devices',
+
+    // done
     LOADING_CAMPUS_CHOICES: 'loading campus choices',
     SET_CAMPUS_CHOICES: 'set campus choices',
 

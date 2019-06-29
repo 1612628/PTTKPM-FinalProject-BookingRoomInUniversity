@@ -828,6 +828,75 @@ router.post('/rooms/:roomid/lecture_times', adminJwtMiddleware, (req, res) => {
         })
     })
 })
+router.get('/rooms/:roomid/devices', adminJwtMiddleware, (req, res) => {
+    const room = parseInt(req.params.roomid)
+
+    quan_ly_thiet_bi.findAndCountAll({
+        where: {
+            phong_quan_ly: room
+        }
+    }).then(result => Promise.all(result.rows.map(r => r.dataValues).map(async r => {
+        const device = await thiet_bi.findByPk(r.thiet_bi_quan_ly)
+        return {
+            id: device.ma_thiet_bi,
+            name: device.ten_thiet_bi,
+            date: device.ngay_san_xuat,
+            company: device.hang_san_xuat,
+            price: device.don_gia
+        }
+    })).then(devices => {
+        res.json({
+            devices: devices
+        })
+    })).catch(err => {
+        console.log(err)
+        res.status(500).send('GET Room Devices Error')
+    })
+})
+router.post('/rooms/:roomid/devices/:deviceid', adminJwtMiddleware, (req, res) => {
+    const room = parseInt(req.params.roomid)
+    const device = req.body
+    if (parseInt(req.params.deviceid) !== parseInt(device.id)) {
+        return res.json({
+            code: 'FAILED',
+            msg: 'Mismatch device ID'
+        })
+    }
+
+    quan_ly_thiet_bi.findOrCreate({
+        where: {
+            phong_quan_ly: room,
+            thiet_bi_quan_ly: device.id
+        }
+    }).then((data, created) => {
+        res.json({ code: 'OK' })
+    }).catch(err => {
+        console.log(err)
+        res.json({
+            code: 'FAILED',
+            msg: err
+        })
+    })
+})
+router.delete('/rooms/:roomid/devices/:deviceid', adminJwtMiddleware, (req, res) => {
+    const room = parseInt(req.params.roomid)
+    const device = parseInt(req.params.deviceid)
+
+    quan_ly_thiet_bi.destroy({
+        where: {
+            phong_quan_ly: room,
+            thiet_bi_quan_ly: device
+        }
+    }).then(() => {
+        res.json({ code: 'OK' })
+    }).catch(err => {
+        console.log(err)
+        res.json({
+            code: 'FAILED',
+            msg: err
+        })
+    })
+})
 
 //---------------------------------------- users --------------------------------------------//
 // admin
@@ -1033,101 +1102,6 @@ router.post('/users/members/:id', adminJwtMiddleware, (req, res) => {
     }
 })
 
-//------------------------------------------- tickets -------------------------------------//
-router.get('/tickets/status', adminJwtMiddleware, (req, res) => {
-    TicketStatus.findAndCountAll({
-    }).then(result => {
-        const types = (result.rows.map(r => r.dataValues).map(r => ({
-            id: r.id,
-            label: r.name,
-        })))
-        res.json({
-            choices: types
-        })
-    }).catch(err => {
-        res.status(500).send('GET Ticket Status Error')
-    })
-})
-router.get('/tickets', adminJwtMiddleware, (req, res) => {
-    console.log('tickets')
-    const query = req.query
-    const page = parseInt(query.page || 0)
-    const status = parseInt(query.status || 0)
-    const searchText = query.searchText
-
-    TicketType.findAndCountAll({
-        where: {
-            ...(status ? { ticketStatusId: status } : {})
-        },
-        ...(page ? ({
-            limit: LIMIT,
-            offset: LIMIT * (page - 1),
-            order: [['updatedAt', 'DESC']],
-        }) : {})
-    }).then(result => {
-        const tickets = (result.rows.map(r => r.dataValues).map(r => ({
-            id: r.id,
-            name: r.name,
-            price: r.price,
-            status: r.ticketStatusId
-        })))
-        res.json({
-            tickets: tickets,
-            currentPage: page,
-            lastPage: Math.ceil(result.count / LIMIT),
-            total: result.count
-        })
-    }).catch(err => {
-        res.status(500).send('GET Tickets Error')
-    })
-})
-router.post('/tickets/:id', adminJwtMiddleware, (req, res) => {
-    const add = req.query.addNew || false
-    const ticket = req.body
-    if (parseInt(req.params.id) !== parseInt(ticket.id)) {
-        return res.json({
-            code: 'FAILED',
-            msg: 'Mismatch ID'
-        })
-    }
-    if (add) {
-        TicketType.create({
-            id: ticket.id,
-            name: ticket.name,
-            price: ticket.price,
-            ticketStatusId: ticket.status
-        }).then(() => {
-            res.json({ code: 'OK' })
-        }).catch(err => {
-            console.log(err)
-            res.json({
-                code: 'FAILED',
-                msg: err
-            })
-        })
-    } else {
-        TicketType.update({
-            name: ticket.name,
-            price: ticket.price,
-            ticketStatusId: ticket.status
-        }, {
-                where: {
-                    id: ticket.id
-                }
-            }).then(() => {
-                res.json({
-                    code: 'OK'
-                })
-            }).catch(err => {
-                console.log(err)
-                res.json({
-                    code: 'FAILED',
-                    msg: err
-                })
-            })
-    }
-})
-
 //----------------------------------------- devices ---------------------------------------------//
 router.get('/devices', adminJwtMiddleware, (req, res) => {
     console.log('devices')
@@ -1207,174 +1181,6 @@ router.post('/devices/:id', adminJwtMiddleware, (req, res) => {
                 })
             })
     }
-})
-
-//---------------------------------------- orders --------------------------------//
-router.get('/orders/status', adminJwtMiddleware, (req, res) => {
-    console.log('order status')
-    OrderStatus.findAndCountAll({
-    }).then(result => {
-        const types = (result.rows.map(r => r.dataValues).map(r => ({
-            id: r.id,
-            label: r.name,
-        })))
-        res.json({
-            choices: types
-        })
-    }).catch(err => {
-        res.status(500).send('GET Order Status Error')
-    })
-})
-router.get('/orders', adminJwtMiddleware, (req, res) => {
-    console.log('orders')
-    const query = req.query
-    const page = parseInt(query.page || 0)
-    const status = parseInt(query.status || 0)
-    let dateStart = query.dateStart && new Date(query.dateStart)
-    if (dateStart) {
-        dateStart.setHours(0, 0, 0)
-    }
-    let dateEnd = query.dateEnd && new Date(query.dateEnd)
-    if (dateEnd) {
-        dateEnd.setHours(23, 59, 59)
-    }
-    const moneyStart = query.moneyStart && parseInt(query.moneyStart)
-    const moneyEnd = query.moneyEnd && parseInt(query.moneyEnd)
-    const searchText = query.searchText
-
-    Order.findAndCountAll({
-        where: {
-            ...(status ? { orderStatusId: status } : {}),
-            ...(dateStart ? ({
-                createdAt: {
-                    [Op.gte]: dateStart
-                }
-            }) : {}),
-            ...(dateEnd ? ({
-                createdAt: {
-                    [Op.lte]: dateEnd
-                }
-            }) : {}),
-        },
-        order: [['updatedAt', 'DESC']],
-    }).then(result => result.rows.map(r => r.dataValues))
-        .then(rows => {
-            return Promise.all(rows.map(async r => {
-                const user = await User.findByPk(r.userId)
-                const tickets = await OrdererTicket.findAndCountAll({
-                    where: { orderId: r.id }
-                }).then(result => {
-                    return Promise.all(result.rows.map(r => r.dataValues)
-                        .map(async r => {
-                            const ticket = await Ticket.findByPk(r.ticketId)
-                            const showTime = await ShowTime.findByPk(ticket.showTimeId)
-                            const ticketType = await TicketType.findByPk(showTime.ticketTypeId)
-                            return {
-                                theater: showTime.theaterId,
-                                date: showTime.date,
-                                time: showTime.time,
-                                row: ticket.seatRow,
-                                column: ticket.seatColumn,
-                                ticket: showTime.ticketTypeId,
-                                price: ticketType.price
-                            }
-                        })
-                    )
-                })
-                const foods = await FoodOrder.findAndCountAll({
-                    where: { orderId: r.id }
-                }).then(result => {
-                    return Promise.all(result.rows.map(r => r.dataValues)
-                        .map(async r => {
-                            const food = await Food.findByPk(r.foodId)
-                            return {
-                                id: r.foodId,
-                                quantity: r.quantity,
-                                price: food.price * r.quantity
-                            }
-                        }))
-                })
-                const total = tickets.reduce((p, c) => p + c.price, 0)
-                    + foods.reduce((p, c) => p + c.price, 0)
-                return {
-                    id: r.id,
-                    username: user.username,
-                    datetime: r.createdAt,
-                    tickets: tickets,
-                    foods: foods,
-                    status: r.orderStatusId,
-                    total: total
-                }
-            })).then(data => {
-                let orders = data
-                if (moneyStart) {
-                    orders = orders.filter(o => o.total >= moneyStart)
-                }
-                if (moneyEnd) {
-                    orders = orders.filter(o => o.total <= moneyEnd)
-                }
-                res.json({
-                    orders: orders.slice((page - 1) * LIMIT, page * LIMIT),
-                    currentPage: page,
-                    lastPage: Math.ceil(orders.length / LIMIT),
-                    total: orders.length
-                })
-            })
-        }).catch(err => {
-            console.log(err)
-            res.status(500).send('GET Orders Error')
-        })
-})
-router.post('/orders/:id', adminJwtMiddleware, (req, res) => {
-    const add = req.query.addNew || false
-    const order = req.body
-    if (parseInt(req.params.id) !== parseInt(order.id)) {
-        return res.json({
-            code: 'FAILED',
-            msg: 'Mismatch ID'
-        })
-    }
-
-    User.findOne({ where: { username: order.username } })
-        .then(user => {
-            if (add) {
-                Order.create({
-                    id: order.id,
-                    orderStatusId: order.status,
-                    userId: user.id
-                }).then(() => {
-                    res.json({ code: 'OK' })
-                }).catch(err => {
-                    res.json({
-                        code: 'FAILED',
-                        msg: err
-                    })
-                })
-            } else {
-                Order.update({
-                    orderStatusId: order.status,
-                    userId: user.id
-                }, {
-                        where: {
-                            id: order.id
-                        }
-                    }).then(() => {
-                        res.json({ code: 'OK' })
-                    }).catch(err => {
-                        res.json({
-                            code: 'FAILED',
-                            msg: err
-                        })
-                    })
-            }
-        })
-        .catch(err => {
-            console.log(err)
-            return res.json({
-                code: 'FAILED',
-                msg: err
-            })
-        })
 })
 
 module.exports = router;
