@@ -13,8 +13,10 @@ const {
     tai_khoan, quan_tri_vien, thanh_vien,
     thiet_bi, quan_ly_thiet_bi,
     tinh_trang_phong, phong, phong_hoi_truong, phong_hoc_thuong,
-    toa_nha, co_so
+    toa_nha, co_so,
+    chi_tiet_dat_phong, tiet_hoc, tinh_trang_dat_phong
 } = require("../models");
+const Op = Sequelize.Op
 
 //---------------------------------- jwt middleware ------------------------------------//
 const adminJwtMiddleware = (req, res, next) => {
@@ -425,6 +427,7 @@ router.get('/dashboard/charts', adminJwtMiddleware, (req, res) => {
 })
 
 //------------------------------------ rooms ---------------------------------------------//
+// dependencies
 router.get('/campus', adminJwtMiddleware, (req, res) => {
     co_so.findAndCountAll({
     }).then(result => {
@@ -488,6 +491,7 @@ router.get('/rooms/status', adminJwtMiddleware, (req, res) => {
     })
 })
 
+// main
 router.get('/rooms/normals', adminJwtMiddleware, (req, res) => {
     console.log('normal rooms')
     const query = req.query
@@ -590,23 +594,26 @@ router.get('/rooms/halls', adminJwtMiddleware, (req, res) => {
         res.status(500).send('GET Hall Rooms Error')
     })
 })
-router.post('/theaters/:id', adminJwtMiddleware, (req, res) => {
+router.post('/rooms/normals/:id', adminJwtMiddleware, (req, res) => {
     const add = req.query.addNew || false
-    const theater = req.body
-    if (parseInt(req.params.id) !== parseInt(theater.id)) {
+    const normal = req.body
+    if (!add && parseInt(req.params.id) !== parseInt(normal.id)) {
         return res.json({
             code: 'FAILED',
             msg: 'Mismatch ID'
         })
     }
     if (add) {
-        Theater.create({
-            id: theater.id,
-            name: theater.name,
-            address: theater.address,
-            rowNum: theater.row,
-            seatPerRow: theater.column,
-            theaterStatusId: theater.status
+        phong.create({
+            ten_phong: normal.name,
+            mo_ta_phong: normal.description,
+            tinh_trang: normal.status,
+            diem_phong: normal.point,
+        }).then(room => {
+            return phong_hoc_thuong.create({
+                ma_phong_hoc_thuong: room.ma_phong,
+                thuoc_toa_nha: normal.building
+            })
         }).then(() => {
             res.json({ code: 'OK' })
         }).catch(err => {
@@ -617,16 +624,23 @@ router.post('/theaters/:id', adminJwtMiddleware, (req, res) => {
             })
         })
     } else {
-        Theater.update({
-            name: theater.name,
-            address: theater.address,
-            rowNum: theater.row,
-            seatPerRow: theater.column,
-            theaterStatusId: theater.status
+        phong.update({
+            ten_phong: normal.name,
+            mo_ta_phong: normal.description,
+            tinh_trang: normal.status,
+            diem_phong: normal.point,
         }, {
                 where: {
-                    id: theater.id
+                    ma_phong: normal.id
                 }
+            }).then(room => {
+                return phong_hoc_thuong.update({
+                    thuoc_toa_nha: normal.building
+                }, {
+                        where: {
+                            ma_phong_hoc_thuong: normal.id
+                        }
+                    })
             }).then(() => {
                 res.json({
                     code: 'OK'
@@ -640,130 +654,180 @@ router.post('/theaters/:id', adminJwtMiddleware, (req, res) => {
             })
     }
 })
-router.get('/theaters/:theaterid/showtimes', adminJwtMiddleware, (req, res) => {
-    const theater = parseInt(req.params.theaterid)
-    const date = req.query.date
-    let endOfDate = new Date(date)
-    endOfDate.setHours(23, 59, 59)
-    let startOfDate = new Date(date)
-    startOfDate.setHours(0, 0, 0)
-    ShowTime.findAndCountAll({
-        where: {
-            theaterId: theater,
-            date: {
-                [Op.lte]: endOfDate,
-                [Op.gte]: startOfDate
-            }
-        }
-    }).then(result => {
-        Promise.all(result.rows.map(r => r.dataValues).map(async r => {
-            return await Ticket.findAndCountAll({
-                where: {
-                    showTimeId: r.id,
-                }
-            }).then(result => {
-                if (result.rows) {
-                    return Promise.all(result.rows.map(r => r.dataValues).map(async r => {
-                        try {
-                            const ticket = await OrdererTicket.findByPk(r.id)
-                            if (ticket.id) {
-                                return [r.seatRow, r.seatColumn]
-                            }
-                            return null
-                        } catch (err) {
-                            return null
-                        }
-                    })).then(tickets => tickets.filter(t => t !== null))
-                }
-                return []
-            }).then(ordered => {
-                return {
-                    id: r.id,
-                    time: r.time,
-                    movie: r.movieId,
-                    ticket: r.ticketTypeId,
-                    ordered: ordered
-                }
+router.post('/rooms/halls/:id', adminJwtMiddleware, (req, res) => {
+    const add = req.query.addNew || false
+    const hall = req.body
+    if (!add && parseInt(req.params.id) !== parseInt(hall.id)) {
+        return res.json({
+            code: 'FAILED',
+            msg: 'Mismatch ID'
+        })
+    }
+    if (add) {
+        phong.create({
+            ten_phong: hall.name,
+            mo_ta_phong: hall.description,
+            tinh_trang: hall.status,
+            diem_phong: hall.point,
+        }).then(room => {
+            return phong_hoi_truong.create({
+                ma_phong_hoi_truong: room.ma_phong,
+                thuoc_co_so: hall.campus
             })
-        })).then(data => {
+        }).then(() => {
+            res.json({ code: 'OK' })
+        }).catch(err => {
+            console.log(err)
             res.json({
-                showTimes: data
+                code: 'FAILED',
+                msg: err
             })
         })
-    }).catch(err => {
-        res.status(500).send('GET Theater Showtimes Error')
-    })
+    } else {
+        phong.update({
+            ten_phong: hall.name,
+            mo_ta_phong: hall.description,
+            tinh_trang: hall.status,
+            diem_phong: hall.point,
+        }, {
+                where: {
+                    ma_phong: hall.id
+                }
+            }).then(room => {
+                return phong_hoi_truong.update({
+                    thuoc_co_so: hall.campus
+                }, {
+                        where: {
+                            ma_phong_hoi_truong: hall.id
+                        }
+                    })
+            }).then(() => {
+                res.json({
+                    code: 'OK'
+                })
+            }).catch(err => {
+                console.log(err)
+                res.json({
+                    code: 'FAILED',
+                    msg: err
+                })
+            })
+    }
 })
-router.post('/theaters/:theaterid/showtimes', adminJwtMiddleware, (req, res) => {
-    const add = req.query.addNew || false
-    const theaterid = parseInt(req.params.theaterid)
-    const showtime = req.body
+router.get('/rooms/:roomid/lecture_times', adminJwtMiddleware, (req, res) => {
+    const room = parseInt(req.params.roomid)
     const date = req.query.date
     let endOfDate = new Date(date)
     endOfDate.setHours(23, 59, 59)
     let startOfDate = new Date(date)
     startOfDate.setHours(0, 0, 0)
 
-    if (add) {
-        ShowTime.create({
-            time: showtime.time,
-            date: date,
-            movieId: showtime.movie,
-            theaterId: theaterid,
-            ticketTypeId: showtime.ticket
-        }).then(() => {
-            res.json({ code: 'OK' })
-        }).catch(err => {
-            console.log(err)
-            res.json({
-                code: 'FAILED',
-                msg: err
-            })
-        })
-    } else {
-        ShowTime.update({
-            time: showtime.time,
-            movieId: showtime.movie,
-            ticketTypeId: showtime.ticket
-        }, {
-                where: {
-                    id: showtime.id,
-                    theaterId: theaterid
+    tiet_hoc.findAndCountAll({
+    }).then(result => Promise.all(result.rows.map(r => r.dataValues).map(async r => {
+        return chi_tiet_dat_phong.findAndCountAll({
+            include: [
+                { model: thanh_vien }
+            ],
+            where: {
+                phong_dat: room,
+                ngay_dat: {
+                    [Op.lte]: endOfDate,
+                    [Op.gte]: startOfDate
+                },
+                tiet_bat_dau: {
+                    [Op.lte]: r.ma_tiet_hoc
+                },
+                tiet_ket_thuc: {
+                    [Op.gte]: r.ma_tiet_hoc
                 }
-            }).then(() => {
-                res.json({
-                    code: 'OK'
+            }
+        }).then(result => {
+            if (result.rows.length === 0) {
+                return ({
+                    id: r.ma_tiet_hoc,
+                    start: r.gio_bat_dau,
+                    end: r.gio_ket_thuc,
+                    status: null,
+                    members: [],
+                    chosenMember: null
                 })
-            }).catch(err => {
-                console.log(err)
-                res.json({
-                    code: 'FAILED',
-                    msg: err
+            } else {
+                const members = result.rows.map(r => r.dataValues).map(r => ({
+                    id: r.thanh_vien.ma_thanh_vien,
+                    name: r.thanh_vien.ho_va_ten,
+                    point: r.thanh_vien.diem_ca_nhan
+                }))
+                const chosen = result.rows.map(r => r.dataValues).filter(r => r.tinh_trang === 1)
+                if (chosen.length > 1) {
+                    throw new Error('!!!!!! 2 ACCEPTED BOOKING IN 1 TIME !!!!!!!')
+                }
+                return ({
+                    id: r.ma_tiet_hoc,
+                    start: r.gio_bat_dau,
+                    end: r.gio_ket_thuc,
+                    status: chosen.length === 0 ? 'Cho duyet' : 'Da duyet',
+                    members: members,
+                    chosenMember: chosen[0].thanh_vien.ma_thanh_vien
                 })
-            })
-    }
-})
-router.delete('/theaters/:theaterid/showtimes/:showtimeid', adminJwtMiddleware, (req, res) => {
-    const theaterid = parseInt(req.params.theaterid)
-    const showtimeid = parseInt(req.params.showtimeid)
-    ShowTime.destroy({
-        where: {
-            id: showtimeid,
-            theaterId: theaterid
-        }
-    }).then(() => {
+            }
+        })
+    })).then(lectureTimes => {
         res.json({
-            code: 'OK'
+            lectureTimes: lectureTimes
+        })
+    })).catch(err => {
+        res.status(500).send('GET Room Lecture Times Error')
+    })
+})
+router.post('/rooms/:roomid/lecture_times', adminJwtMiddleware, (req, res) => {
+    const room = parseInt(req.params.roomid)
+    const lectureTime = req.body
+    const date = req.query.date
+    let endOfDate = new Date(date)
+    endOfDate.setHours(23, 59, 59)
+    let startOfDate = new Date(date)
+    startOfDate.setHours(0, 0, 0)
+
+    chi_tiet_dat_phong.findAndCountAll({
+        where: {
+            phong_dat: room,
+            ngay_dat: {
+                [Op.lte]: endOfDate,
+                [Op.gte]: startOfDate
+            },
+            tiet_bat_dau: {
+                [Op.lte]: r.ma_tiet_hoc
+            },
+            tiet_ket_thuc: {
+                [Op.gte]: r.ma_tiet_hoc
+            }
+        }
+    }).then(result => {
+        const rows = result.rows.map(r => r.dataValues)
+        return Promise.all(rows.map(async r => {
+            return chi_tiet_dat_phong.update({
+                tinh_trang_dat_phong: r.thanh_vien_dat !== lectureTime.chosenMember ? 3 : 1,
+            }, {
+                    where: {
+                        ma_chi_tiet: r.ma_chi_tiet
+                    }
+                }).catch(err => {
+                    console.log(err)
+                    res.json({
+                        code: 'FAILED',
+                        msg: err
+                    })
+                })
+        })).then(() => {
+            res.json({ code: 'OK' })
         })
     }).catch(err => {
-        console.log(err)
         res.json({
             code: 'FAILED',
             msg: err
         })
     })
 })
-
 
 //---------------------------------------- users --------------------------------------------//
 // admin
@@ -948,7 +1012,7 @@ router.post('/users/members/:id', adminJwtMiddleware, (req, res) => {
                     ma_tai_khoan: member.id
                 }
             }).then(user => {
-                return quan_tri_vien.update({
+                return thanh_vien.update({
                     diem_ca_nhan: member.point
                 }, {
                         where: {

@@ -181,7 +181,7 @@ class DeviceScreen extends React.Component {
                                 <div>{item.name}</div>
                                 <div className="text-center">{formatDate(item.date)}</div>
                                 <div>{item.company}</div>
-                                <div className="text-right">{item.price}</div>
+                                <div className="text-right">{formatMoney(item.price) + ' VND'}</div>
                             </ClickableTableCells>
                             <td className="text-right">
                                 <InlineClickableView onClick={() => {

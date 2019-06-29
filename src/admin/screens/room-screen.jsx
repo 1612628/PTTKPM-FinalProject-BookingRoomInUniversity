@@ -12,7 +12,7 @@ import { NigamonIcon } from '../components/common/nigamon-icon';
 import { RemoteDataModal, ModalState } from '../components/common/modal';
 import { FormInput, FormSelect, FormDatePicker, FormTextArea } from '../components/common/form';
 import { buildErrorTooltip } from '../components/common/error-tooltip';
-import TheaterMovieList from '../components/theater/theater-movie-list';
+import LectureTimeList from '../components/room/room-lecture-times-list';
 import { isLoading, isFailed } from '../libs/remote-data';
 import { getColorById } from '../libs/colors'
 import { Button } from '../components/common/button';
@@ -62,12 +62,12 @@ class RoomScreen extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            pageNormal: null,
+            pageNormal: 1,
             statusNormal: null,
             buildingNormal: null,
             campusNormal: null,
 
-            pageHall: null,
+            pageHall: 1,
             statusHall: null,
             campusHall: null,
 
@@ -206,7 +206,7 @@ class RoomScreen extends React.Component {
     }
     handleNormalBuildingChoice(building) {
         this.customSetState({ buildingNormal: building })
-        this.props.loadNormals(this.state.page, {
+        this.props.loadNormals(this.state.pageNormal, {
             building: building,
             campus: this.state.campusNormal,
             status: this.state.statusNormal,
@@ -216,7 +216,7 @@ class RoomScreen extends React.Component {
     handleNormalCampusChoice(campus) {
         this.customSetState({ campusNormal: campus, buildingNormal: null })
         this.props.loadBuildings(campus)
-        this.props.loadNormals(this.state.page, {
+        this.props.loadNormals(this.state.pageNormal, {
             building: null,
             campus: campus,
             status: this.state.statusNormal,
@@ -234,7 +234,7 @@ class RoomScreen extends React.Component {
     }
     handleHallCampusChoice(campus) {
         this.customSetState({ campusHall: campus })
-        this.props.loadHalls(this.state.page, {
+        this.props.loadHalls(this.state.pageHall, {
             campus: campus,
             status: this.state.statusHall,
             searchText: this.state.searchText
@@ -384,13 +384,6 @@ class RoomScreen extends React.Component {
                     }}>
                         <NigamonIcon name='cog' />
                     </InlineClickableView>
-                    {/* /
-                    <InlineClickableView onClick={() => {
-                        beforeOnClick()
-                        this.openModal(ModalState.REMOVE)
-                    }}>
-                        <NigamonIcon name='times' />
-                    </InlineClickableView> */}
                 </td>
             </tr>
         )
@@ -569,6 +562,7 @@ class RoomScreen extends React.Component {
                 <FormInput label='Ten phong' disabled={true} value={newItem.name} />
                 <FormTextArea label='Mo ta' disabled={true} value={newItem.description} />
                 <FormInput label='Diem phong' disabled={true} value={newItem.point} />
+                <LectureTimeList room={newItem} disabled={true} />
                 <FormSelect label='Tinh trang' disabled={true} value={newItem.status} options={status} />
                 {renderExtra()}
             </form>
@@ -609,8 +603,8 @@ class RoomScreen extends React.Component {
                     const campuses = this.props.campusChoices.data
                     if (campuses.findIndex(c => c.id === newItem.campus) < 0) {
                         this.props.loadBuildingsNormal(campuses[0].id)
+                        newItem.campus = campuses[0].id
                         setState({ ...newItem, campus: campuses[0].id }, true)
-                        return null
                     }
                     return (
                         <React.Fragment>
@@ -620,8 +614,8 @@ class RoomScreen extends React.Component {
                                 renderOnFailed={() => buildings.error}
                                 renderOnSuccess={() => {
                                     if (buildings.data.findIndex(c => c.id === newItem.building) < 0) {
+                                        newItem.building = buildings.data[0].id
                                         setState({ ...newItem, building: buildings.data[0].id }, true)
-                                        return null
                                     }
                                     return (
                                         <FormSelect label='Toa nha' disabled={false} value={newItem.building} options={buildings.data}
@@ -644,7 +638,6 @@ class RoomScreen extends React.Component {
                     const campuses = this.props.campusChoices.data
                     if (campuses.findIndex(c => c.id === newItem.campus) < 0) {
                         setState({ ...newItem, campus: campuses[0].id }, true)
-                        return null
                     }
                     return (
                         <React.Fragment>
@@ -691,6 +684,7 @@ class RoomScreen extends React.Component {
                     onChange={this.validate((text) => {
                         setState({ ...newItem, point: text })
                     })} />
+                {addNew ? null : <LectureTimeList room={newItem} disabled={false} />}
                 <FormSelect label='Tinh trang' disabled={false} value={newItem.status} options={status}
                     onChange={status => setState({ ...newItem, status: parseInt(status) })}
                 />
@@ -701,6 +695,28 @@ class RoomScreen extends React.Component {
     }
 
     renderModals() {
+        const type = this.state.type
+        let newItem = type === 1 ? this.state.newItemNormal : this.state.newItemHall
+        const setState = (() => {
+            switch (type) {
+                case 1:
+                    return () => this.setState({ modalOpen: false }, () => this.setState({ newItemNormal: { ...nullNormalRoom } }))
+                case 2:
+                    return () => this.setState({ modalOpen: false }, () => this.setState({ newItemHall: { ...nullHallRoom } }))
+                default:
+                    return () => console.error('unknown room type')
+            }
+        })()
+        const upload = (() => {
+            switch (type) {
+                case 1:
+                    return (item, addNew) => this.props.uploadNormal(item, addNew)
+                case 2:
+                    return (item, addNew) => this.props.uploadHall(item, addNew)
+                default:
+                    return () => console.error('unknown room type')
+            }
+        })()
         return (
             <RemoteDataModal
                 large={true}
@@ -716,20 +732,14 @@ class RoomScreen extends React.Component {
                 onStateChange={s => this.setState({ modalState: s })}
                 editCallback={() => {
                     if ($(this.newForm).valid()) {
-                        this.props.uploadTheater(this.state.newItemNormal)
-                        this.setState({ modalOpen: false })
+                        upload(newItem)
+                        setState()
                     }
                 }}
                 newCallback={() => {
                     if ($(this.newForm).valid()) {
-                        this.props.uploadTheater(this.state.newItemNormal, true)
-                        this.setState({ modalOpen: false })
-                    }
-                }}
-                removeCallback={() => {
-                    if ($(this.newForm).valid()) {
-                        this.props.removeTheater(this.state.newItemNormal)
-                        this.setState({ modalOpen: false })
+                        upload(newItem, true)
+                        setState()
                     }
                 }}
             />
@@ -765,7 +775,7 @@ const mapDispatchToProps = dispatch => {
         loadNormals: (page, options) => dispatch(loadNormals(page, options)),
         uploadNormal: (room, addNew) => dispatch(uploadNormal(room, addNew)),
         loadHalls: (page, options) => dispatch(loadHalls(page, options)),
-        uploadHalls: (room, addNew) => dispatch(uploadHall(room, addNew)),
+        uploadHall: (room, addNew) => dispatch(uploadHall(room, addNew)),
         loadBuildings: (campusId) => dispatch(loadBuildingChoices(campusId)),
         loadBuildingsNormal: (campusId) => dispatch(loadBuildingChoicesNormal(campusId))
     }

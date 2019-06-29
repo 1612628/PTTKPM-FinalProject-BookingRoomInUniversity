@@ -228,22 +228,21 @@ export default class AdminApi {
         return secureApiClient.getJson(`/rooms/${room.id}/lecture_times`, { params: { date: date } })
             .then(data => {
                 return {
-                    showTimes: data.showTimes.map(s => ({
+                    lectureTimes: data.lectureTimes.map(s => ({
                         ...s,
-                        time: parseTime(s.time)
+                        start: parseTime(s.start),
+                        end: parseTime(s.end)
                     }))
                 }
             })
     }
-    static uploadLectureTime(room, date, lectureTime, addNew, options) {
+    static uploadLectureTime(room, date, lectureTime, options) {
         const data = {
             ...lectureTime,
-            time: formatTime(lectureTime.time)
         }
         return secureApiClient.postJson(`/rooms/${room.id}/lecture_times`, data, {
             params: {
                 date: date,
-                addNew: addNew
             }
         })
     }

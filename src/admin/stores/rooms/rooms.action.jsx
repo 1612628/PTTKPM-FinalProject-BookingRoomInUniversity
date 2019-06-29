@@ -143,7 +143,7 @@ export const loadLectureTimes = (room, date, options) => {
         dispatch(loadingLectureTimes(true))
         AdminAPI.getLectureTimes(room, date, options)
             .then(data => {
-                if (data.showTimes) {
+                if (data.lectureTimes) {
                     dispatch(setLectureTimes(data, null))
                     dispatch(loadingLectureTimes(false))
                 } else {
@@ -194,7 +194,6 @@ const setStatusChoices = (data, err) => {
     }
 }
 export const loadStatusChoices = () => {
-    console.log('load status')
     return (dispatch, getState) => {
         dispatch(loadingStatusChoices(true))
         AdminAPI.getRoomStatusChoices()

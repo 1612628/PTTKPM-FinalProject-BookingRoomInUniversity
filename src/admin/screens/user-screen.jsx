@@ -471,16 +471,6 @@ class UserScreen extends React.Component {
                     return () => console.error('unknown user type')
             }
         })()
-        const remove = (() => {
-            switch (type) {
-                case 1:
-                    return item => this.props.removeAdmin(item)
-                case 2:
-                    return item => this.props.removeMember(item)
-                default:
-                    return () => console.error('unknown user type')
-            }
-        })()
         return (
             <RemoteDataModal
                 large={true}
@@ -503,12 +493,6 @@ class UserScreen extends React.Component {
                 newCallback={() => {
                     if ($(this.newForm).valid()) {
                         upload(newItem, true)
-                        setState()
-                    }
-                }}
-                removeCallback={() => {
-                    if ($(this.newForm).valid()) {
-                        remove(newItem)
                         setState()
                     }
                 }}

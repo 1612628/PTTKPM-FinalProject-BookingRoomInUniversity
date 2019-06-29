@@ -10,16 +10,16 @@ class LoginScreen extends React.Component {
         super(props)
         this.state = {
             showError: false,
-            email: '',
+            username: '',
             password: ''
         }
     }
 
     render() {
         if (this.props.isLogin) {
-            return <Redirect to={routes.USER.path} />
+            return <Redirect to={routes.ROOM.path} />
         }
-        let allowLogin = this.state.email !== '' && this.state.password !== ''
+        let allowLogin = this.state.username !== '' && this.state.password !== ''
         return (
             <div className='container-fluid'>
                 <div className="row justify-content-center">
@@ -36,13 +36,13 @@ class LoginScreen extends React.Component {
                                 </button>
                             </div> : null
                         }
-                        <label htmlFor="inputEmail" className="font-weight-bold h5">Email</label>
-                        <input type="email" className="form-control rounded-0"
-                            placeholder="Dia chi Email (test@dev.com)" autoFocus
-                            onChange={(e) => this.setState({ email: e.target.value })}
+                        <label htmlFor="inputEmail" className="font-weight-bold h5">Ten dang nhap</label>
+                        <input type="text" className="form-control rounded-0"
+                            placeholder="Ten dang nhap (1)" autoFocus
+                            onChange={(e) => this.setState({ username: e.target.value })}
                         />
                         <label htmlFor="inputPassword" className="font-weight-bold mt-3 h5">Mat khau</label>
-                        <input type="password" id="inputPassword" className="form-control rounded-0" placeholder="Mat khau (test)"
+                        <input type="password" id="inputPassword" className="form-control rounded-0" placeholder="Mat khau (1)"
                             onChange={(e) => this.setState({ password: e.target.value })}
                         />
                         <div className="checkbox my-3">
@@ -54,7 +54,7 @@ class LoginScreen extends React.Component {
                             className={`btn btn-lg btn-primary btn-block font-weight-bold rounded-0`}
                             disabled={!allowLogin}
                             onClick={() => {
-                                this.props.login(this.state.email, this.state.password)
+                                this.props.login(this.state.username, this.state.password)
                             }}
                         >
                             Dang nhap
