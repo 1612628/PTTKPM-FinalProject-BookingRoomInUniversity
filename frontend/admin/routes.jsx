@@ -18,5 +18,9 @@ export const routes = {
     RESET_PASSWORD: {
         id: 7,
         path: '/admin/reset'
+    },
+    DEFAULT: {
+        id: 8,
+        path: '/admin'
     }
 }

@@ -8,6 +8,7 @@ const tokenName = 'NIGAMON_JWT_TOKEN'
 
 const LIMIT = 5;
 
+const models = require('../models')
 const {
     Sequelize,
     tai_khoan, quan_tri_vien, thanh_vien,
@@ -15,8 +16,14 @@ const {
     tinh_trang_phong, phong, phong_hoi_truong, phong_hoc_thuong,
     toa_nha, co_so,
     chi_tiet_dat_phong, tiet_hoc, tinh_trang_dat_phong
-} = require("../models");
+} = models
 const Op = Sequelize.Op
+
+//------------------------------- Repos ----------------------------------------//
+const { SequelizeAdminRepo } = require('../src/repos/admin-repo')
+const { SequelizeMemberRepo } = require('../src/repos/member-repo')
+const AdminRepo = new SequelizeAdminRepo(models)
+const MemberRepo = new SequelizeMemberRepo(models)
 
 //---------------------------------- jwt middleware ------------------------------------//
 const adminJwtMiddleware = (req, res, next) => {
@@ -93,7 +100,6 @@ router.post('/login', (req, res) => {
         })
         .catch(() => res.json({ isLogin: false }))
 })
-
 router.get('/login', adminJwtMiddleware, (req, res) => {
     const decoded = jwt.decode(req.headers.authorization.slice(7))
     res.json({
@@ -105,324 +111,6 @@ router.get('/login', adminJwtMiddleware, (req, res) => {
             phone: decoded.phone,
             email: decoded.email
         }
-    })
-})
-
-//----------------------------------- dashboard-------------------------------------//
-router.get('/dashboard/orders', adminJwtMiddleware, (req, res) => {
-    console.log('orders dashboard')
-    const query = req.query
-    const page = parseInt(query.page || 0)
-    const status = parseInt(query.status || 0)
-
-    Order.findAndCountAll({
-        where: {
-            ...(status ? { orderStatusId: status } : {}),
-        },
-        limit: LIMIT,
-        offset: (page - 1) * LIMIT,
-        order: [['updatedAt', 'DESC']],
-    }).then(result => Promise.all(result.rows.map(r => r.dataValues).map(async r => {
-        const user = await User.findByPk(r.userId)
-        const tickets = await OrdererTicket.findAndCountAll({
-            where: { orderId: r.id }
-        }).then(result => {
-            return Promise.all(result.rows.map(r => r.dataValues)
-                .map(async r => {
-                    const ticket = await Ticket.findByPk(r.ticketId)
-                    const showTime = await ShowTime.findByPk(ticket.showTimeId)
-                    const ticketType = await TicketType.findByPk(showTime.ticketTypeId)
-                    return {
-                        price: ticketType.price
-                    }
-                })
-            )
-        })
-        const foods = await FoodOrder.findAndCountAll({
-            where: { orderId: r.id }
-        }).then(result => {
-            return Promise.all(result.rows.map(r => r.dataValues)
-                .map(async r => {
-                    const food = await Food.findByPk(r.foodId)
-                    return {
-                        price: food.price * r.quantity
-                    }
-                }))
-        })
-        const total = tickets.reduce((p, c) => p + c.price, 0)
-            + foods.reduce((p, c) => p + c.price, 0)
-        return {
-            username: user.username,
-            date: r.createdAt,
-            time: r.createdAt,
-            total: total
-        }
-    })).then(data => {
-        let orders = data
-        res.json({
-            orders: orders,
-            currentPage: page,
-            lastPage: Math.ceil(result.count / LIMIT),
-            total: result.count
-        })
-    })).catch(err => {
-        console.log(err)
-        res.status(500).send('GET Dashboard Orders Error')
-    })
-})
-router.get('/dashboard/movies', adminJwtMiddleware, (req, res) => {
-    console.log('movies dashboard')
-    const query = req.query
-    const page = parseInt(query.page || 1)
-    const today = new Date()
-    let endOfDate = new Date()
-    endOfDate.setHours(23, 59, 59)
-    let startOfDate = new Date()
-    startOfDate.setHours(0, 0, 0)
-
-    ShowTime.findAndCountAll({
-        where: {
-            date: {
-                [Op.lte]: endOfDate,
-                [Op.gte]: startOfDate
-            },
-            time: {
-                [Op.lte]: `${today.getHours()}:${today.getSeconds()}`
-            },
-        },
-        order: [['time', 'DESC']]
-    }).then(results => {
-        Promise.all(results.rows.map(r => r.dataValues).map(async r => {
-            let movie = await Movie.findByPk(r.movieId)
-            let theater = await Theater.findByPk(r.theaterId)
-            let genre = await MovieGenre.findByPk(movie.movieGenreId)
-
-            let movieStart = r.time.split(':').map(c => parseInt(c))
-            movieStart = movieStart[0] * 60 + movieStart[1]
-            let currentTime = today.getHours() * 60 + today.getMinutes()
-            if (movieStart + 120 > currentTime) {
-                return {
-                    name: movie.name,
-                    type: genre.name,
-                    director: movie.director,
-                    theater: theater.name,
-                    showTime: r.time
-                }
-            }
-            return null
-        })).then(data => {
-            const movies = data.filter(m => m !== null)
-            res.json({
-                movies: movies.slice((page - 1) * LIMIT, page * LIMIT),
-                currentPage: page,
-                lastPage: Math.ceil(movies.length / LIMIT),
-                total: movies.length
-            })
-        })
-    }).catch(err => {
-        console.log(err)
-        res.status(500).send('GET Dashboard Movies Error')
-    })
-})
-router.get('/dashboard/theaters', adminJwtMiddleware, (req, res) => {
-    console.log('theaters dashboard')
-    const query = req.query
-    const page = parseInt(query.page || 0)
-    const today = new Date()
-    let endOfDate = new Date()
-    endOfDate.setHours(23, 59, 59)
-    let startOfDate = new Date()
-    startOfDate.setHours(0, 0, 0)
-
-    Theater.findAndCountAll({
-        where: {
-            theaterStatusId: 1,
-        },
-        ...(page ? ({
-            limit: LIMIT,
-            offset: LIMIT * (page - 1),
-            order: [['updatedAt', 'DESC']],
-        }) : {})
-    }).then(results => {
-        Promise.all(results.rows.map(r => r.dataValues).map(async r => {
-            return await ShowTime.findAndCountAll({
-                where: {
-                    theaterId: r.id,
-                    date: {
-                        [Op.lte]: endOfDate,
-                        [Op.gte]: startOfDate
-                    },
-                    time: {
-                        [Op.gte]: `${today.getHours()}:${today.getSeconds()}`
-                    }
-                },
-                limit: 1,
-                order: [['time', 'ASC']]
-            }).then(results => {
-                if (results.count === 0) {
-                    return null
-                }
-                const showtime = results.rows[0].dataValues
-                return OrdererTicket.findAndCountAll({
-                    include: [{
-                        model: Ticket,
-                        as: 'ticket'
-                    }],
-                    where: {
-                        "$ticket.showTimeId$": showtime.id
-                    }
-                }).then(results => results.count)
-                    .then(count => {
-                        return {
-                            name: r.name,
-                            address: r.address,
-                            capacity: r.rowNum * r.seatPerRow,
-                            ordered: count
-                        }
-                    })
-            })
-        })).then(theaters => {
-            res.json({
-                theaters: theaters.filter(t => t !== null),
-                currentPage: page,
-                lastPage: Math.ceil(results.count / LIMIT),
-                total: results.count
-            })
-        })
-    }).catch(err => {
-        console.log(err)
-        res.status(500).send('GET Dashboard Theaters Error')
-    })
-})
-router.get('/dashboard/charts', adminJwtMiddleware, (req, res) => {
-    console.log('charts dashboard')
-    const query = req.query
-    let start = query.start && new Date(query.start)
-    if (start) {
-        start.setHours(0, 0, 0)
-    }
-    let end = query.end && new Date(query.end)
-    if (end) {
-        end.setHours(23, 59, 59)
-    }
-
-    Order.findAndCountAll({
-        where: {
-            orderStatusId: 1,
-            ...((start || end) ? ({
-                createdAt: {
-                    ...(start ? ({
-                        [Op.gte]: start
-                    }) : {}),
-                    ...(end ? ({
-                        [Op.lte]: end
-                    }) : {})
-                }
-            }) : {})
-        },
-        order: [['createdAt', 'ASC']],
-    }).then(result => {
-        if (!start) {
-            start = new Date(result.rows[0].dataValues.createdAt)
-        }
-        if (!end) {
-            end = new Date(result.rows[result.rows.length - 1].dataValues.createdAt)
-        }
-        let labels = []
-        let date = new Date(start.getTime())
-        while (date.getDate() < end.getDate() || date.getMonth() < end.getMonth() || date.getFullYear() < end.getFullYear()) {
-            labels.push(new Date(date.getTime()))
-            let currentDate = date.getDate()
-            date.setDate(currentDate + 1)
-        }
-        labels.push(end)
-
-        Promise.all(labels.map(async d => {
-            let startOfDate = new Date(d.getTime())
-            startOfDate.setHours(0, 0, 0)
-            let endOfDate = new Date(d.getTime())
-            endOfDate.setHours(23, 59, 59)
-
-            const orders = await Order.findAndCountAll({
-                where: {
-                    createdAt: {
-                        [Op.gte]: startOfDate,
-                        [Op.lte]: endOfDate
-                    }
-                }
-            }).then(result => Promise.all(result.rows.map(r => r.dataValues).map(async r => {
-                const tickets = await OrdererTicket.findAndCountAll({
-                    where: { orderId: r.id }
-                }).then(result => {
-                    return Promise.all(result.rows.map(r => r.dataValues)
-                        .map(async r => {
-                            const ticket = await Ticket.findByPk(r.ticketId)
-                            const showTime = await ShowTime.findByPk(ticket.showTimeId)
-                            const ticketType = await TicketType.findByPk(showTime.ticketTypeId)
-                            return {
-                                price: ticketType.price
-                            }
-                        })
-                    )
-                })
-                const foods = await FoodOrder.findAndCountAll({
-                    where: { orderId: r.id }
-                }).then(result => {
-                    return Promise.all(result.rows.map(r => r.dataValues)
-                        .map(async r => {
-                            const food = await Food.findByPk(r.foodId)
-                            return {
-                                price: food.price * r.quantity
-                            }
-                        }))
-                })
-                const ticketTotal = tickets.reduce((p, c) => p + c.price, 0)
-                const foodTotal = foods.reduce((p, c) => p + c.price, 0)
-                return {
-                    food: foodTotal,
-                    ticket: ticketTotal,
-                    total: ticketTotal + foodTotal
-                }
-            })))
-            const users = await User.findAndCountAll({
-                where: {
-                    createdAt: {
-                        [Op.gte]: startOfDate,
-                        [Op.lte]: endOfDate
-                    }
-                }
-            }).then(result => result.rows.length)
-            return {
-                date: d,
-                orders: orders,
-                users: users
-            }
-        })).then(data => {
-            const totalFood = data.map(d => d.orders.reduce((p, c) => p + c.food, 0)).reduce((p, c) => p + c, 0)
-            const totalTicket = data.map(d => d.orders.reduce((p, c) => p + c.ticket, 0)).reduce((p, c) => p + c, 0)
-            const total = totalFood + totalTicket
-            res.json({
-                charts: {
-                    income: {
-                        labels: labels,
-                        data: data.map(d => d.orders.reduce((p, c) => p + c.total, 0))
-                    },
-                    newUser: {
-                        labels: labels,
-                        data: data.map(d => {
-                            return d.users
-                        })
-                    },
-                    incomeShare: {
-                        labels: ['Thuc an', 'Ve phim'],
-                        data: [totalFood * 100 / total, totalTicket * 100 / total]
-                    }
-                }
-            })
-        })
-    }).catch(err => {
-        console.log(err)
-        res.status(500).send('GET Dashboard Charts Error')
     })
 })
 
@@ -904,99 +592,47 @@ router.get('/users/admins', adminJwtMiddleware, (req, res) => {
     console.log('admins')
     const query = req.query
     const page = parseInt(query.page || 0)
-    const searchText = query.searchText
 
-    quan_tri_vien.findAndCountAll({
-        ...(page ? ({
-            limit: LIMIT,
-            offset: LIMIT * (page - 1),
-            order: [['updatedAt', 'DESC']],
-        }) : {})
-    }).then(result => {
-        Promise.all(result.rows.map(r => r.dataValues).map(async r => {
-            return tai_khoan.findByPk(r.ma_quan_tri)
-                .then(user => ({
-                    id: r.ma_quan_tri,
-                    username: user.ten_dang_nhap,
-                    fullname: user.ho_va_ten,
-                    cmnd: user.cmnd,
-                    phone: user.sdt,
-                    email: user.email,
-                    department: r.phong_ban
-                }))
-        })).then(admins => {
-            res.json({
-                admins: admins,
-                currentPage: page,
-                lastPage: Math.ceil(result.count / LIMIT),
-                total: result.count
-            })
+    AdminRepo.fetchPage(LIMIT, page)
+        .then(result => {
+            if (result.ok) {
+                res.json(result.msg)
+            } else {
+                console.log(result.msg)
+                res.status(500).send('GET Admins Error')
+            }
         })
-    }).catch(err => {
-        res.status(500).send('GET Admins Error')
-    })
 })
 router.post('/users/admins/:id', adminJwtMiddleware, (req, res) => {
     const add = req.query.addNew || false
     const admin = req.body
-    if (!add && parseInt(req.params.id) !== parseInt(admin.id)) {
+    const id = parseInt(req.params.id)
+    if (!add && id !== parseInt(admin.id)) {
         return res.json({
             code: 'FAILED',
             msg: 'Mismatch ID'
         })
     }
     if (add) {
-        tai_khoan.create({
-            ten_dang_nhap: admin.username,
-            mat_khau: admin.password,
-            ho_va_ten: admin.fullname,
-            cmnd: admin.cmnd,
-            sdt: admin.phone,
-            email: admin.email
-        }).then(user => {
-            return quan_tri_vien.create({
-                ma_quan_tri: user.ma_tai_khoan,
-                phong_ban: admin.department
-            })
-        }).then(() => {
-            res.json({ code: 'OK' })
-        }).catch(err => {
-            console.log(err)
-            res.json({
-                code: 'FAILED',
-                msg: err
-            })
-        })
-    } else {
-        tai_khoan.update({
-            ten_dang_nhap: admin.username,
-            mat_khau: admin.password,
-            ho_va_ten: admin.fullname,
-            cmnd: admin.cmnd,
-            sdt: admin.phone,
-            email: admin.email
-        }, {
-                where: {
-                    ma_tai_khoan: admin.id
+        AdminRepo.addOne(admin)
+            .then(result => {
+                if (result.ok) {
+                    res.json({ code: 'OK' })
+                } else {
+                    console.log(result.msg)
+                    res.json({ code: 'FAILED', msg: result.msg })
                 }
-            }).then(user => {
-                return quan_tri_vien.update({
-                    phong_ban: admin.department
-                }, {
-                        where: {
-                            ma_quan_tri: admin.id
-                        }
-                    })
-            }).then(() => {
-                res.json({
-                    code: 'OK'
-                })
-            }).catch(err => {
-                console.log(err)
-                res.json({
-                    code: 'FAILED',
-                    msg: err
-                })
+            })
+    } else {
+        const old = { ...admin, id: id }
+        AdminRepo.updateOne(old, admin)
+            .then(result => {
+                if (result.ok) {
+                    res.json({ code: 'OK' })
+                } else {
+                    console.log(result.msg)
+                    res.json({ code: 'FAILED', msg: result.msg })
+                }
             })
     }
 })
@@ -1005,99 +641,47 @@ router.get('/users/members', adminJwtMiddleware, (req, res) => {
     console.log('members')
     const query = req.query
     const page = parseInt(query.page || 0)
-    const searchText = query.searchText
 
-    thanh_vien.findAndCountAll({
-        ...(page ? ({
-            limit: LIMIT,
-            offset: LIMIT * (page - 1),
-            order: [['updatedAt', 'DESC']],
-        }) : {})
-    }).then(result => {
-        Promise.all(result.rows.map(r => r.dataValues).map(async r => {
-            return tai_khoan.findByPk(r.ma_thanh_vien)
-                .then(user => ({
-                    id: r.ma_thanh_vien,
-                    username: user.ten_dang_nhap,
-                    fullname: user.ho_va_ten,
-                    cmnd: user.cmnd,
-                    phone: user.sdt,
-                    email: user.email,
-                    point: r.diem_ca_nhan
-                }))
-        })).then(members => {
-            res.json({
-                members: members,
-                currentPage: page,
-                lastPage: Math.ceil(result.count / LIMIT),
-                total: result.count
-            })
+    MemberRepo.fetchPage(LIMIT, page)
+        .then(result => {
+            if (result.ok) {
+                res.json(result.msg)
+            } else {
+                console.log(result.msg)
+                res.status(500).send('GET Members Error')
+            }
         })
-    }).catch(err => {
-        res.status(500).send('GET Admins Error')
-    })
 })
 router.post('/users/members/:id', adminJwtMiddleware, (req, res) => {
     const add = req.query.addNew || false
     const member = req.body
-    if (!add && parseInt(req.params.id) !== parseInt(member.id)) {
+    const id = parseInt(req.params.id)
+    if (!add && id !== parseInt(member.id)) {
         return res.json({
             code: 'FAILED',
             msg: 'Mismatch ID'
         })
     }
     if (add) {
-        tai_khoan.create({
-            ten_dang_nhap: member.username,
-            mat_khau: member.password,
-            ho_va_ten: member.fullname,
-            cmnd: member.cmnd,
-            sdt: member.phone,
-            email: member.email
-        }).then(user => {
-            return thanh_vien.create({
-                ma_thanh_vien: user.ma_tai_khoan,
-                diem_ca_nhan: member.point
-            })
-        }).then(() => {
-            res.json({ code: 'OK' })
-        }).catch(err => {
-            console.log(err)
-            res.json({
-                code: 'FAILED',
-                msg: err
-            })
-        })
-    } else {
-        tai_khoan.update({
-            ten_dang_nhap: member.username,
-            mat_khau: member.password,
-            ho_va_ten: member.fullname,
-            cmnd: member.cmnd,
-            sdt: member.phone,
-            email: member.email
-        }, {
-                where: {
-                    ma_tai_khoan: member.id
+        MemberRepo.addOne(member)
+            .then(result => {
+                if (result.ok) {
+                    res.json({ code: 'OK' })
+                } else {
+                    console.log(result.msg)
+                    res.json({ code: 'FAILED', msg: result.msg })
                 }
-            }).then(user => {
-                return thanh_vien.update({
-                    diem_ca_nhan: member.point
-                }, {
-                        where: {
-                            ma_thanh_vien: member.id
-                        }
-                    })
-            }).then(() => {
-                res.json({
-                    code: 'OK'
-                })
-            }).catch(err => {
-                console.log(err)
-                res.json({
-                    code: 'FAILED',
-                    msg: err
-                })
+            })
+    } else {
+        const old = { ...member, id: id }
+        MemberRepo.updateOne(old, member)
+            .then(result => {
+                if (result.ok) {
+                    res.json({ code: 'OK' })
+                } else {
+                    console.log(result.msg)
+                    res.json({ code: 'FAILED', msg: result.msg })
+                }
             })
     }
 })

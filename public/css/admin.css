@@ -5,6 +5,10 @@
     font-size: 14px;
 }
 
+body {
+    overflow-y: scroll;
+}
+
 a {
     text-decoration: none !important;
 }

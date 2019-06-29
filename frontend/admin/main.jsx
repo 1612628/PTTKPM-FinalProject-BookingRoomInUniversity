@@ -21,6 +21,7 @@ class App extends React.Component {
                     <Route path={routes.DEVICE.path} component={DeviceScreen} />
                     <Route path={routes.USER.path} component={UserScreen} />
                     <Route path={routes.ROOM.path} component={RoomScreen} />
+                    <Route path={routes.DEFAULT.path} component={RoomScreen} />
                 </Switch>
             </BrowserRouter>
         )

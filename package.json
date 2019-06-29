@@ -7,8 +7,8 @@
     "test": "nodemon app.js",
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "build-admin": "webpack --mode production --entry ./src/admin/main.jsx --output ./dist/admin/main.js",
-    "watch-admin": "webpack --mode development --watch --entry ./src/admin/main.jsx --output ./dist/admin/main.js"
+    "build-admin": "webpack --mode production --entry ./frontend/admin/main.jsx --output ./dist/admin/main.js",
+    "watch-admin": "webpack --mode development --watch --entry ./frontend/admin/main.jsx --output ./dist/admin/main.js"
   },
   "repository": {
     "type": "git",
