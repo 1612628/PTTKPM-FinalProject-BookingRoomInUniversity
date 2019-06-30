@@ -20,7 +20,15 @@ class NodeMailer {
             text: this.template(content),
         };
 
-        return transporter.sendMail(mailOptions)
+        return new Promise((resolver,reject)=>{
+            transporter.sendMail(mailOptions,function(err,info){
+                if(err){
+                    reject(null);
+                }else{
+                    resolver(info);
+                }
+            })
+        });
     }
 }
 
@@ -30,7 +38,7 @@ const MAIL_PROVIDERS = {
 
 const GetMailSender = provider => {
     switch (provider) {
-        case MAIL_PROVIDERS: {
+        case MAIL_PROVIDERS.GMAIL:{
             return {
                 user: 'tltbushcmus@gmail.com',
                 pass: 'TLTbus123'
@@ -46,7 +54,7 @@ const MAIL_TEMPLATES = {
             "Tiết bắt đầu: " + content.startId + "\n" +
             "Tiết kết thúc: " + content.endId + "\n" +
             "Ngày đặt: " + content.bookingDate + "\n" +
-            "Bạn vui lòng đợi quản trị viên duyệt đơn hàng (tối đa là 2 ngày)"
+            "Bạn vui lòng đợi quản trị viên duyệt đơn hàng (tối đa là 2 ngày)";
     },
     BOOKING_ACCEPTED: (content) => {
         return "Đơn hàng: " + content.bookingId + ".\n" +
@@ -54,7 +62,7 @@ const MAIL_TEMPLATES = {
             "Tiết bắt đầu: " + content.startId + "\n" +
             "Tiết kết thúc: " + content.endId + "\n" +
             "Ngày đặt: " + content.bookingDate + "\n" +
-            "Bạn vui lòng đợi quản trị viên duyệt đơn hàng (tối đa là 2 ngày)"
+            "Bạn vui lòng đợi quản trị viên duyệt đơn hàng (tối đa là 2 ngày)";
     },
     BOOKING_REJECTED: (content) => {
         return "Đơn hàng: " + content.bookingId + ".\n" +
@@ -62,7 +70,7 @@ const MAIL_TEMPLATES = {
             "Tiết bắt đầu: " + content.startId + "\n" +
             "Tiết kết thúc: " + content.endId + "\n" +
             "Ngày đặt: " + content.bookingDate + "\n" +
-            "Bạn vui lòng đợi quản trị viên duyệt đơn hàng (tối đa là 2 ngày)"
+            "Bạn vui lòng đợi quản trị viên duyệt đơn hàng (tối đa là 2 ngày)";
     }
 }
 
@@ -85,5 +93,7 @@ class NodeMailerBuilder {
 }
 
 module.exports = {
-    NodeMailerBuilder
+    MAIL_PROVIDERS,
+    NodeMailerBuilder,
+    NodeMailer
 }
