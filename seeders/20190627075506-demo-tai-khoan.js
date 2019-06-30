@@ -25,7 +25,7 @@ module.exports = {
       },
       {
         ten_dang_nhap: "ndt",
-        mat_khau: "$2y$10$Ix96Mu8Q.3IbVX9v3Ij4Ruk56G5cpCsJaBJGnPywsj1y52thgdsKa",
+        mat_khau: "$2y$10$Z24.AIH4996GGkXrbThCx.gRjIoIcWBgxa9ilwU4qO1d1jugBYYdy",
         ho_va_ten: "Nguyễn Duy Thanh",
         cmnd: "123123123",
         sdt: "000000000",
@@ -35,7 +35,7 @@ module.exports = {
       },
       {
         ten_dang_nhap: "hmh",
-        mat_khau: "$2y$10$Ix96Mu8Q.3IbVX9v3Ij4Ruk56G5cpCsJaBJGnPywsj1y52thgdsKa",
+        mat_khau: "$2y$10$Z24.AIH4996GGkXrbThCx.gRjIoIcWBgxa9ilwU4qO1d1jugBYYdy",
         ho_va_ten: "Hồ Minh Huấn",
         cmnd: "123123123",
         sdt: "000000000",
@@ -45,7 +45,7 @@ module.exports = {
       },
       {
         ten_dang_nhap: "thn",
-        mat_khau: "$2y$10$Ix96Mu8Q.3IbVX9v3Ij4Ruk56G5cpCsJaBJGnPywsj1y52thgdsKa",
+        mat_khau: "$2y$10$Z24.AIH4996GGkXrbThCx.gRjIoIcWBgxa9ilwU4qO1d1jugBYYdy",
         ho_va_ten: "Trần Hoài Nam",
         cmnd: "123123123",
         sdt: "000000000",

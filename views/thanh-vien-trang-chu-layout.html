@@ -16,6 +16,7 @@
 
   <link href="/css/addons/datatables.min.css" rel="stylesheet">
 
+  <link rel="stylesheet" href="/css/header-footer.css">
   <link rel="stylesheet" href="/css/thanh-vien-trang-chu.css">
 
 </head>
@@ -23,7 +24,7 @@
 <body>
   
   <!-- header -->
-  <div id="header-container">
+  <div id="header-container" class="container-fluid bg-dark">
     </div>
     <script id="header-template" type="text/x-handlebars-template">
       {{> headerPartial content=user}}
@@ -35,7 +36,7 @@
           <div class="col-xl-2 col-md-3 col-sm-4 card">
             <div class="card-body">
               <div class="text-sx font-weight-bold text-primary text-uppercase">
-                Danh sách phòng
+                Đăng ký phòng
               </div>
             </div>
           </div>
@@ -52,28 +53,26 @@
               <p class="text-left font-weight-bold">Cơ sở</p>
             </div>      
             <div class="row form">
-              <input type="text" list="danh-sach-co-so" id="co-so" class="datalist pl-2 form-control">
-              <datalist id="danh-sach-co-so">
-              </datalist>
+              <select id="danh-sach-co-so" class="form-control">
+              </select>
             </div>    
           </div>
           <div class="col-lx-2 col-md-3 col-sm-4">
               <div class="row pb-2">
-                  <p class="text-left font-weight-bold">Toà nhà</p> 
+                  <p class="text-left font-weight-bold">Ngày</p> 
                 </div>      
                 <div class="row form">
-                  <input type="text" list="danh-sach-toa-nha" id="co-so" class="datalist pl-2 form-control">
-                  <datalist id="danh-sach-toa-nha">
-                  </datalist>
-                </div>  
+                  <input type="date" id="ngay" class="pl-2 form-control">
+                  
+                </div> 
           </div>
           <div class="col-lx-2 col-md-3 col-sm-4 pt-4 mt-3  ">
-            <button type="button" class="btn btn-info" >Tìm kiếm</button>  
+            <button type="button" class="btn btn-info" id="btn-search-phong">Tìm kiếm</button>  
           </div>
         </div>
   </div>
 
-  <div id="dat-phong-container">
+  <div id="dat-phong-container" class="container">
   </div>
   <script id="dat-phong-template" type="text/x-handlebars-template">
     {{> datPhongPartial content=danhsachphong}}

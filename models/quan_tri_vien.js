@@ -10,6 +10,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {underscored: true});
   quan_tri_vien.associate = function(models) {
     // associations can be defined here
+    quan_tri_vien.belongsTo(models.tai_khoan,{foreign:'ma_quan_tri',targetKey:'ma_tai_khoan'});
   };
   return quan_tri_vien;
 };
