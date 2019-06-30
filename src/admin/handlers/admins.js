@@ -1,6 +1,6 @@
 const LIMIT = 5
 
-const UserHandlers = adminRepo => {
+const AdminHandlers = adminRepo => {
     return [
         {
             method: 'get',
@@ -65,5 +65,5 @@ const uploadAdmin = adminRepo => (req, res) => {
 }
 
 module.exports = {
-    UserHandlers
+    AdminHandlers
 }

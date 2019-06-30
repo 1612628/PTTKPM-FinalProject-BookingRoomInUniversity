@@ -59,62 +59,62 @@ const adminJwtMiddleware = (req, res, next) => {
 }
 
 //---------------------------------------- login -----------------------------------------------//
-router.post('/login', (req, res) => {
-    tai_khoan.findOne({ where: { ten_dang_nhap: req.body.username } })
-        .then(user => {
-            return quan_tri_vien.findByPk(user.id)
-                .then(admin => user)
-                .catch(err => {
-                    res.json({ isLogin: false })
-                })
-        })
-        .then(user => {
-            bcrypt.compare(req.body.password, user.mat_khau, (err, bcryptRes) => {
-                if (err) {
-                    return res.json({ isLogin: false })
-                }
-                jwt.sign({
-                    username: user.ten_dang_nhap,
-                    fullname: user.ho_va_ten,
-                    cmnd: user.cmnd,
-                    phone: user.sdt,
-                    email: user.email
-                }, secretKey, {
-                        expiresIn: "2h"
-                    }, (err, token) => {
-                        if (err) {
-                            res.status(500).send('Something is broken')
-                        } else {
-                            res.json({
-                                isLogin: true,
-                                token: token,
-                                userInfo: {
-                                    username: user.ten_dang_nhap,
-                                    fullname: user.ho_va_ten,
-                                    cmnd: user.cmnd,
-                                    phone: user.sdt,
-                                    email: user.email
-                                }
-                            })
-                        }
-                    })
-            })
-        })
-        .catch(() => res.json({ isLogin: false }))
-})
-router.get('/login', adminJwtMiddleware, (req, res) => {
-    const decoded = jwt.decode(req.headers.authorization.slice(7))
-    res.json({
-        isLogin: true,
-        userInfo: {
-            username: decoded.username,
-            fullname: decoded.fullname,
-            cmnd: decoded.cmnd,
-            phone: decoded.phone,
-            email: decoded.email
-        }
-    })
-})
+// router.post('/login', (req, res) => {
+//     tai_khoan.findOne({ where: { ten_dang_nhap: req.body.username } })
+//         .then(user => {
+//             return quan_tri_vien.findByPk(user.id)
+//                 .then(admin => user)
+//                 .catch(err => {
+//                     res.json({ isLogin: false })
+//                 })
+//         })
+//         .then(user => {
+//             bcrypt.compare(req.body.password, user.mat_khau, (err, bcryptRes) => {
+//                 if (err) {
+//                     return res.json({ isLogin: false })
+//                 }
+//                 jwt.sign({
+//                     username: user.ten_dang_nhap,
+//                     fullname: user.ho_va_ten,
+//                     cmnd: user.cmnd,
+//                     phone: user.sdt,
+//                     email: user.email
+//                 }, secretKey, {
+//                         expiresIn: "2h"
+//                     }, (err, token) => {
+//                         if (err) {
+//                             res.status(500).send('Something is broken')
+//                         } else {
+//                             res.json({
+//                                 isLogin: true,
+//                                 token: token,
+//                                 userInfo: {
+//                                     username: user.ten_dang_nhap,
+//                                     fullname: user.ho_va_ten,
+//                                     cmnd: user.cmnd,
+//                                     phone: user.sdt,
+//                                     email: user.email
+//                                 }
+//                             })
+//                         }
+//                     })
+//             })
+//         })
+//         .catch(() => res.json({ isLogin: false }))
+// })
+// router.get('/login', adminJwtMiddleware, (req, res) => {
+//     const decoded = jwt.decode(req.headers.authorization.slice(7))
+//     res.json({
+//         isLogin: true,
+//         userInfo: {
+//             username: decoded.username,
+//             fullname: decoded.fullname,
+//             cmnd: decoded.cmnd,
+//             phone: decoded.phone,
+//             email: decoded.email
+//         }
+//     })
+// })
 
 //------------------------------------ rooms ---------------------------------------------//
 // dependencies
@@ -646,102 +646,102 @@ router.delete('/rooms/:roomid/devices/:deviceid', adminJwtMiddleware, (req, res)
 //             })
 //     }
 // })
-// member
-router.get('/users/members', adminJwtMiddleware, (req, res) => {
-    console.log('members')
-    const query = req.query
-    const page = parseInt(query.page || 0)
+// // member
+// router.get('/users/members', adminJwtMiddleware, (req, res) => {
+//     console.log('members')
+//     const query = req.query
+//     const page = parseInt(query.page || 0)
 
-    MemberRepo.fetchPage(LIMIT, page)
-        .then(result => {
-            if (result.ok) {
-                res.json(result.msg)
-            } else {
-                console.log(result.msg)
-                res.status(500).send('GET Members Error')
-            }
-        })
-})
-router.post('/users/members/:id', adminJwtMiddleware, (req, res) => {
-    const add = req.query.addNew || false
-    const member = req.body
-    const id = parseInt(req.params.id)
-    if (!add && id !== parseInt(member.id)) {
-        return res.json({
-            code: 'FAILED',
-            msg: 'Mismatch ID'
-        })
-    }
-    if (add) {
-        MemberRepo.addOne(member)
-            .then(result => {
-                if (result.ok) {
-                    res.json({ code: 'OK' })
-                } else {
-                    console.log(result.msg)
-                    res.json({ code: 'FAILED', msg: result.msg })
-                }
-            })
-    } else {
-        const old = { id }
-        MemberRepo.updateOne(old, member)
-            .then(result => {
-                if (result.ok) {
-                    res.json({ code: 'OK' })
-                } else {
-                    console.log(result.msg)
-                    res.json({ code: 'FAILED', msg: result.msg })
-                }
-            })
-    }
-})
+//     MemberRepo.fetchPage(LIMIT, page)
+//         .then(result => {
+//             if (result.ok) {
+//                 res.json(result.msg)
+//             } else {
+//                 console.log(result.msg)
+//                 res.status(500).send('GET Members Error')
+//             }
+//         })
+// })
+// router.post('/users/members/:id', adminJwtMiddleware, (req, res) => {
+//     const add = req.query.addNew || false
+//     const member = req.body
+//     const id = parseInt(req.params.id)
+//     if (!add && id !== parseInt(member.id)) {
+//         return res.json({
+//             code: 'FAILED',
+//             msg: 'Mismatch ID'
+//         })
+//     }
+//     if (add) {
+//         MemberRepo.addOne(member)
+//             .then(result => {
+//                 if (result.ok) {
+//                     res.json({ code: 'OK' })
+//                 } else {
+//                     console.log(result.msg)
+//                     res.json({ code: 'FAILED', msg: result.msg })
+//                 }
+//             })
+//     } else {
+//         const old = { id }
+//         MemberRepo.updateOne(old, member)
+//             .then(result => {
+//                 if (result.ok) {
+//                     res.json({ code: 'OK' })
+//                 } else {
+//                     console.log(result.msg)
+//                     res.json({ code: 'FAILED', msg: result.msg })
+//                 }
+//             })
+//     }
+// })
 
 //----------------------------------------- devices ---------------------------------------------//
-router.get('/devices', adminJwtMiddleware, (req, res) => {
-    console.log('devices')
-    const query = req.query
-    const page = parseInt(query.page || 0)
+// router.get('/devices', adminJwtMiddleware, (req, res) => {
+//     console.log('devices')
+//     const query = req.query
+//     const page = parseInt(query.page || 0)
 
-    DeviceRepo.fetchPage(LIMIT, page)
-        .then(result => {
-            if (result.ok) {
-                res.json(result.msg)
-            } else {
-                res.status(500).send('GET Devices Error')
-            }
-        })
-})
-router.post('/devices/:id', adminJwtMiddleware, (req, res) => {
-    const add = req.query.addNew || false
-    const device = req.body
-    const id = parseInt(req.params.id)
+//     DeviceRepo.fetchPage(LIMIT, page)
+//         .then(result => {
+//             if (result.ok) {
+//                 res.json(result.msg)
+//             } else {
+//                 res.status(500).send('GET Devices Error')
+//             }
+//         })
+// })
+// router.post('/devices/:id', adminJwtMiddleware, (req, res) => {
+//     const add = req.query.addNew || false
+//     const device = req.body
+//     const id = parseInt(req.params.id)
 
-    if (add && id !== parseInt(device.id)) {
-        return res.json({
-            code: 'FAILED',
-            msg: 'Mismatch ID'
-        })
-    }
+//     if (add && id !== parseInt(device.id)) {
+//         return res.json({
+//             code: 'FAILED',
+//             msg: 'Mismatch ID'
+//         })
+//     }
 
-    if (add) {
-        DeviceRepo.addOne(device)
-            .then(result => {
-                if (result.ok) {
-                    res.json({ code: 'OK' })
-                } else {
-                    res.json({ code: 'FAILED', msg: result.msg })
-                }
-            })
-    } else {
-        DeviceRepo.updateOne({ id }, device)
-            .then(result => {
-                if (result.ok) {
-                    res.json({ code: 'OK' })
-                } else {
-                    res.json({ code: 'FAILED', msg: result.msg })
-                }
-            })
-    }
-})
+//     if (add) {
+//         DeviceRepo.addOne(device)
+//             .then(result => {
+//                 if (result.ok) {
+//                     res.json({ code: 'OK' })
+//                 } else {
+//                     res.json({ code: 'FAILED', msg: result.msg })
+//                 }
+//             })
+//     } else {
+//         DeviceRepo.updateOne({ id }, device)
+//             .then(result => {
+//                 if (result.ok) {
+//                     res.json({ code: 'OK' })
+//                 } else {
+//                     res.json({ code: 'FAILED', msg: result.msg })
+//                 }
+//             })
+//     }
+// })
 
 module.exports = router;

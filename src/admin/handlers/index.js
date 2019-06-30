@@ -1,7 +1,10 @@
 const express = require('express')
 const path = require('path');
 const { JwtMiddleware } = require('../middlewares/jwt-middleware')
-const { UserHandlers } = require('./users')
+const { AuthorizationHandlers } = require('./authorizations')
+const { AdminHandlers } = require('./admins')
+const { MemberHandlers } = require('./members')
+const { DeviceHandlers } = require('./devices')
 
 const configRoutes = app => {
     // define new routers
@@ -13,9 +16,31 @@ const configRoutes = app => {
         res.sendFile(path.resolve(__dirname + '/../views/index.html'))
     })
 
-    // hook user handlers to api router
-    const userHandlers = UserHandlers(app.database.AdminRepo)
-    userHandlers.forEach(handler => {
+    // hook authorization handlers to api router
+    const authHandlers = AuthorizationHandlers(app.database.AdminRepo)
+    authHandlers.forEach(handler => {
+        if (handler.sercure) {
+            apiRouter[handler.method](handler.path, JwtMiddleware, handler.handler)
+        } else {
+            apiRouter[handler.method](handler.path, handler.handler)
+        }
+    })
+
+    // hook admin handlers to api router
+    const adminHandlers = AdminHandlers(app.database.AdminRepo)
+    adminHandlers.forEach(handler => {
+        apiRouter[handler.method](handler.path, JwtMiddleware, handler.handler)
+    })
+
+    // hook member handlers to api router
+    const memberHandlers = MemberHandlers(app.database.MemberRepo)
+    memberHandlers.forEach(handler => {
+        apiRouter[handler.method](handler.path, JwtMiddleware, handler.handler)
+    })
+
+    // hook device handlers to api router
+    const deviceHandlers = DeviceHandlers(app.database.DeviceRepo)
+    deviceHandlers.forEach(handler => {
         apiRouter[handler.method](handler.path, JwtMiddleware, handler.handler)
     })
 

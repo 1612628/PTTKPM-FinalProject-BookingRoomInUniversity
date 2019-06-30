@@ -88,6 +88,37 @@ class SequelizeAdminRepo {
             msg: err
         }))
     }
+
+    fetchOneByUsername(username) {
+        return this.accounts.findOne({ where: { ten_dang_nhap: username } })
+            .then(account => {
+                return this.admins.findByPk(account.ma_tai_khoan)
+                    .then(admin => {
+                        return ({
+                            id: admin.ma_quan_tri,
+                            username: account.ten_dang_nhap,
+                            password: account.mat_khau,
+                            fullname: account.ho_va_ten,
+                            cmnd: account.cmnd,
+                            phone: account.sdt,
+                            email: account.email,
+                            department: admin.phong_ban
+                        })
+                    })
+                    .then(admin => {
+                        return {
+                            ok: true,
+                            msg: admin
+                        }
+                    })
+                    .catch(err => {
+                        return {
+                            ok: false,
+                            msg: err
+                        }
+                    })
+            })
+    }
 }
 
 module.exports = {

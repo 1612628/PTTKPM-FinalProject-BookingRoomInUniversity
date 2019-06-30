@@ -38,7 +38,6 @@ let myApp = new App('room booking', app, database)
 const adminComponent = new Admin()
 myApp.addComponent(adminComponent)
 
-
 var PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
     console.log(`Server is running at ${PORT}`);

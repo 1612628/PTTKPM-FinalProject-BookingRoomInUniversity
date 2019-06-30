@@ -1,49 +1,48 @@
 const LIMIT = 5
 
-const DeviceHandlers = deviceRepo => {
+const MemberHandlers = memberRepo => {
     return [
         {
             method: 'get',
-            path: '/devices',
-            handler: getDevices(deviceRepo)
+            path: '/users/members',
+            handler: getMembers(memberRepo)
         },
         {
             method: 'post',
-            path: '/devices/:id',
-            handler: uploadDevice(deviceRepo)
+            path: '/users/members/:id',
+            handler: uploadMember(memberRepo)
         }
     ]
 }
 
-const getDevices = deviceRepo => (req, res) => {
-    console.log('devices')
+const getMembers = memberRepo => (req, res) => {
+    console.log('admins')
     const query = req.query
     const page = parseInt(query.page || 0)
 
-    deviceRepo.fetchPage(LIMIT, page)
+    memberRepo.fetchPage(LIMIT, page)
         .then(result => {
             if (result.ok) {
                 res.json(result.msg)
             } else {
                 console.log(result.msg)
-                res.status(500).send('GET Member Error')
+                res.status(500).send('GET Members Error')
             }
         })
 }
 
-const uploadDevice = deviceRepo => (req, res) => {
-    console.log('upload device')
+const uploadMember = memberRepo => (req, res) => {
     const add = req.query.addNew || false
-    const device = req.body
+    const member = req.body
     const id = parseInt(req.params.id)
-    if (!add && id !== parseInt(device.id)) {
+    if (!add && id !== parseInt(member.id)) {
         return res.json({
             code: 'FAILED',
             msg: 'Mismatch ID'
         })
     }
     if (add) {
-        deviceRepo.addOne(device)
+        memberRepo.addOne(member)
             .then(result => {
                 if (result.ok) {
                     res.json({ code: 'OK' })
@@ -53,7 +52,7 @@ const uploadDevice = deviceRepo => (req, res) => {
                 }
             })
     } else {
-        deviceRepo.updateOne({ id }, device)
+        memberRepo.updateOne({ id }, member)
             .then(result => {
                 if (result.ok) {
                     res.json({ code: 'OK' })
@@ -66,5 +65,5 @@ const uploadDevice = deviceRepo => (req, res) => {
 }
 
 module.exports = {
-    DeviceHandlers
+    MemberHandlers
 }
