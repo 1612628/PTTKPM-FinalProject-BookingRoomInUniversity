@@ -1,35 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Thông tin cá nhân</title>
-    <link rel="stylesheet" href="/css/thanh-vien-thong-tin-ca-nhan.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Thông tin cá nhân</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css">
+  <!-- Bootstrap core CSS -->
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Material Design Bootstrap -->
+  <link href="/css/mdb.min.css" rel="stylesheet">
+
+  <link href="/css/addons/datatables.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/header-footer.css">
+  <link rel="stylesheet" href="/css/thanh-vien-thong-tin-ca-nhan.css">
 </head>
+
 <body>
-<div class="container">
-  
-    <label for="ten-dang-nhap">Tên đăng nhập</label>
-    <input type="text" id="tean-dang-nhap" placeholder="Tên đăng nhập.." value="DrThanh98">
+  <div id="thong-tin-ca-nhan-template" class="container">
 
-    <label for="matKhau">Mật khẩu</label>
-    <input type="text" id="matKhau" placeholder="Mật khẩu.." value="1234">
+  </div>
+  <!-- script -->
+  <!-- JQuery -->
+  <script type="text/javascript" src="/js/jquery-3.4.1.min.js"></script>
+  <!-- Bootstrap tooltips -->
+  <script type="text/javascript" src="/js/popper.min.js"></script>
+  <!-- Bootstrap core JavaScript -->
+  <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+  <!-- MDB core JavaScript -->
+  <script type="text/javascript" src="/js/mdb.min.js"></script>
 
-    <label for="hoTen">Họ và tên</label>
-    <input type="text" id="hoTen" placeholder="Họ và tên.." value="Nguyễn Duy Thanh">
+  <script type="text/javascript" src="/js/addons/datatables.min.js"></script>
 
-    <label for="CMND">CMND</label>
-    <input type="text" id="CMND" placeholder="CMND.." value="161262800">
-
-    <label for="SDT">SĐT</label>
-    <input type="text" id="SDT" placeholder="SĐT.." value="0344576982">
-
-    <label for="email">Email</label>
-    <input type="text" id="email" placeholder="Email.." value="thanhnguyenpro@gmail.com">
-
-</div>
+  <script src="/js/handlebars-v4.1.2.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@8"></script>
 
+  <script src="/js/helper.js"></script>
+  <script src="/js/header-footer.js"></script>
+  <script src="/js/thanh-vien.js"></script>
+
+
 </body>
+
 </html>

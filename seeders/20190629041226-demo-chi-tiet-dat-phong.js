@@ -21,7 +21,26 @@ module.exports = {
       tinh_trang: 1,
       created_at: new Date(),
       updated_at: new Date()
-    }], {});
+    },{
+      thanh_vien_dat: 2,
+      phong_dat: 2,
+      tiet_bat_dau: 4,
+      tiet_ket_thuc: 7,
+      ngay_dat: new Date(),
+      tinh_trang: 1,
+      created_at: new Date(),
+      updated_at: new Date()
+    },{
+      thanh_vien_dat: 2,
+      phong_dat: 3,
+      tiet_bat_dau: 4,
+      tiet_ket_thuc: 7,
+      ngay_dat: new Date(),
+      tinh_trang: 1,
+      created_at: new Date(),
+      updated_at: new Date()
+    }
+  ], {});
   },
 
   down: (queryInterface, Sequelize) => {
