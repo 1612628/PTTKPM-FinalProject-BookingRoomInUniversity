@@ -1,3 +1,5 @@
+const { MAIL_PROVIDERS } = require('../../services/mailer')
+
 const RoomHandlers = (roomRepo,
     lectureTimeRepo,
     memberRepo,
@@ -113,9 +115,9 @@ const uploadRoomBooking = (bookingRepo, mailerBuilder) => (req, res) => {
         , { ...booking, chosen: booking.chosenMember })
         .then(result => {
             if (result.ok) {
-                const rejectMailer = mailerBuilder.buildBookingRejected('gmail')
-                const acceptedMailer = mailerBuilder.buildBookingAccepted('gmail')
-                const pendingMailer = mailerBuilder.buildBookingPending('gmail')
+                const rejectMailer = mailerBuilder.buildBookingRejected(MAIL_PROVIDERS.GMAIL)
+                const acceptedMailer = mailerBuilder.buildBookingAccepted(MAIL_PROVIDERS.GMAIL)
+                const pendingMailer = mailerBuilder.buildBookingPending(MAIL_PROVIDERS.GMAIL)
                 Promise.all(booking.members.map(mem => ({
                     ...mem,
                     startId: mem.start,
