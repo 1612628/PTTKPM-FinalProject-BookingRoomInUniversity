@@ -11,21 +11,34 @@
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css">
   <!-- Bootstrap core CSS -->
   <link href="/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Material Design Bootstrap -->
-  <link href="/css/mdb.min.css" rel="stylesheet">
 
-  <link href="/css/addons/datatables.min.css" rel="stylesheet">
 
   <link rel="stylesheet" href="/css/header-footer.css">
   <link rel="stylesheet" href="/css/thanh-vien-thong-tin-ca-nhan.css">
 </head>
 
 <body>
+  <!-- header -->
+  <div id="header-container" class="container-fluid bg-dark">
+  </div>
+  <script id="header-template" type="text/x-handlebars-template">
+    {{> headerPartial content=user}}
+        </script>
+  <!-- /header -->
   <div id="thong-tin-ca-nhan-container" class="container">
   </div>
   <script id="thong-tin-ca-nhan-template" type="text/x-handlebars-template">
-  {{> thongTinCaNhanPartial content=this}}
+    {{> thongTinCaNhanPartial content=user}}
   </script>
+  <!-- footer -->
+  <div id="footer-container">
+  </div>
+  <script id="footer-template" type="text/x-handlebars-template">
+    {{> footerPartial}}
+      </script>
+  <!-- /footer -->
+
+
   <!-- script -->
   <!-- JQuery -->
   <script type="text/javascript" src="/js/jquery-3.4.1.min.js"></script>
@@ -33,17 +46,14 @@
   <script type="text/javascript" src="/js/popper.min.js"></script>
   <!-- Bootstrap core JavaScript -->
   <script type="text/javascript" src="/js/bootstrap.min.js"></script>
-  <!-- MDB core JavaScript -->
-  <script type="text/javascript" src="/js/mdb.min.js"></script>
 
   <script type="text/javascript" src="/js/addons/datatables.min.js"></script>
 
   <script src="/js/handlebars-v4.1.2.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@8"></script>
 
   <script src="/js/helper.js"></script>
   <script src="/js/header-footer.js"></script>
-
+  <script src="/js/thong-tin-ca-nhan.js"></script>
 
 </body>
 
