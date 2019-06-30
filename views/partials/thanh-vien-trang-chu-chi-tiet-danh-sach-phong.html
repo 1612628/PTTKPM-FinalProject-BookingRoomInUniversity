@@ -1,7 +1,7 @@
 <script id="chi-tiet-danh-sach-phong-partial" type="text/x-handlebars-template">
     <tbody>
         {{#each content}}
-            <tr class="centered" id="chi-tiet-phong">
+            <tr class="centered" id="chi-tiet-phong" align="center" valign="middle">
                 <td class="align-sefl-center align-content-center">{{ten_phong}}</td>
                 <td class="align-sefl-center align-content-center">{{tinh_trang}}</td>
                 <td class="align-sefl-center align-content-center">{{mo_ta_phong}}</td>
@@ -10,24 +10,29 @@
                 <td class="align-sefl-center align-content-center">{{thuoc_co_so}}</td>
                 
                 <td class="align-sefl-center align-content-center">
-                    <select>
+                    <select class="form-control" id="bat_dau_{{ma_phong}}" onclick="chonTietBatDau({{ma_phong}})">
                         {{#each danhsachtiethoc}}
-                            <option>{{ma_tiet_hoc}}</option>
+                            {{#if this}}
+                            <option>{{this}}</option>
+                            {{else}}
+                            <option disabled>Đã được đặt</option>
+                            {{/if}}
                         {{/each}}
                     </select>
                 </td>
                 <td class="align-sefl-center align-content-center">
-                    <select>
+                    <select class="form-control" id="ket_thuc_{{ma_phong}}" onclick="chonTietKetThuc({{ma_phong}})">
                         {{#each danhsachtiethoc}}
-                            <option>{{ma_tiet_hoc}}</option>
+                            {{#if this}}
+                            <option>{{this}}</option>
+                            {{else}}
+                            <option disabled>Đã được đặt</option>
+                            {{/if}}
                         {{/each}}
                     </select>
                 </td>
-                <td class="align-sefl-center align-content-center">
-                    <span class="button-checkbox">
-                        <button type="button" onclick="chonPhong({{ma_phong}})" class="btn" data-color="success"></button>
-                        <input type="checkboxx" class="hidden">
-                    </span>
+                <td class="align-sefl-center align-content-center">                    
+                    <button type="button" id="btn-{{ma_phong}}" onclick="datPhong({{ma_phong}})" class="btn btn-success" disabled>Đặt phòng</button>                    
                 </td>
             </tr>
         {{/each}}

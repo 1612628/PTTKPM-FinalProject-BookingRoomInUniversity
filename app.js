@@ -5,12 +5,13 @@ var db = require('./config/database.js');
 var path = require('path');
 dotenv.config();
 
+app.use(express.json());
 app.use(express.static(__dirname + '/public/'));
 app.use(express.static(__dirname + '/views/'));
 var models = require('./models');
 
 app.get('/',(req,res)=>{
-    res.redirect('/trangchu');
+    res.sendFile(path.join(__dirname,'/views/'+'thanh-vien-dang-nhap.html'));
 });
 
 var thanhvien = require('./routes/thanhvien-router');

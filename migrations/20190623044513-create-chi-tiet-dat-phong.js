@@ -21,7 +21,7 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       ngay_dat:{
-        type: Sequelize.DATE
+        type: Sequelize.DATEONLY
       },
       tinh_trang: {
         type: Sequelize.INTEGER

@@ -19,6 +19,9 @@ module.exports = {
      {mo_ta:"Đã duyệt",
      created_at:new Date(),
      updated_at:new Date()},
+     {mo_ta:"Hủy",
+     created_at:new Date(),
+     updated_at:new Date()},
    ], {});
   },
 

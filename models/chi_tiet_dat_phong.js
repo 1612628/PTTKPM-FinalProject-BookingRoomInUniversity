@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
     phong_dat: DataTypes.INTEGER,
     tiet_bat_dau: DataTypes.INTEGER,
     tiet_ket_thuc: DataTypes.INTEGER,
-    ngay_dat: DataTypes.DATE,
+    ngay_dat: DataTypes.DATEONLY,
     tinh_trang: DataTypes.INTEGER
   }, {underscored: true});
   chi_tiet_dat_phong.associate = function(models) {
