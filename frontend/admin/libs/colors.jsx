@@ -8,4 +8,6 @@ const colors = [
 ]
 
 export const getColorById = id => colors[id - 1]
-export const PRIMARY_COLOR = '#2d7ff9'
+export const PRIMARY = '#2d7ff9'
+export const SECONDARY = 'rgb(182, 182, 182)'
+export const DARK = '#333'

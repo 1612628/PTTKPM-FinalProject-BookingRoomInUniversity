@@ -6,7 +6,8 @@
 }
 
 body {
-    overflow-y: scroll;
+    overflow-y: scroll !important;
+    padding: 0 !important;
 }
 
 a {

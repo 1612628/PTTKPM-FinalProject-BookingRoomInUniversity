@@ -416,7 +416,12 @@ router.get('/rooms/:roomid/lecture_times', adminJwtMiddleware, (req, res) => {
     }).then(result => Promise.all(result.rows.map(r => r.dataValues).map(async r => {
         return chi_tiet_dat_phong.findAndCountAll({
             include: [
-                { model: thanh_vien }
+                {
+                    model: thanh_vien,
+                    include: [
+                        { model: tai_khoan }
+                    ]
+                }
             ],
             where: {
                 phong_dat: room,
@@ -442,22 +447,23 @@ router.get('/rooms/:roomid/lecture_times', adminJwtMiddleware, (req, res) => {
                     chosenMember: null
                 })
             } else {
-                const members = result.rows.map(r => r.dataValues).map(r => ({
+                const members = (result.rows.map(r => r.dataValues).map(r => ({
                     id: r.thanh_vien.ma_thanh_vien,
-                    name: r.thanh_vien.ho_va_ten,
+                    name: r.thanh_vien.tai_khoan.ho_va_ten,
                     point: r.thanh_vien.diem_ca_nhan
-                }))
+                })))
                 const chosen = result.rows.map(r => r.dataValues).filter(r => r.tinh_trang === 1)
                 if (chosen.length > 1) {
                     throw new Error('!!!!!! 2 ACCEPTED BOOKING IN 1 TIME !!!!!!!')
                 }
+                console.log(chosen)
                 return ({
                     id: r.ma_tiet_hoc,
                     start: r.gio_bat_dau,
                     end: r.gio_ket_thuc,
                     status: chosen.length === 0 ? 'Cho duyet' : 'Da duyet',
                     members: members,
-                    chosenMember: chosen[0].thanh_vien.ma_thanh_vien
+                    chosenMember: chosen.length === 0 ? null : chosen[0].thanh_vien.ma_thanh_vien
                 })
             }
         })
@@ -466,6 +472,7 @@ router.get('/rooms/:roomid/lecture_times', adminJwtMiddleware, (req, res) => {
             lectureTimes: lectureTimes
         })
     })).catch(err => {
+        console.log(err)
         res.status(500).send('GET Room Lecture Times Error')
     })
 })
@@ -486,17 +493,18 @@ router.post('/rooms/:roomid/lecture_times', adminJwtMiddleware, (req, res) => {
                 [Op.gte]: startOfDate
             },
             tiet_bat_dau: {
-                [Op.lte]: r.ma_tiet_hoc
+                [Op.lte]: lectureTime.id
             },
             tiet_ket_thuc: {
-                [Op.gte]: r.ma_tiet_hoc
+                [Op.gte]: lectureTime.id
             }
         }
     }).then(result => {
         const rows = result.rows.map(r => r.dataValues)
         return Promise.all(rows.map(async r => {
+            console.log(r.thanh_vien_dat, lectureTime.chosenMember)
             return chi_tiet_dat_phong.update({
-                tinh_trang_dat_phong: r.thanh_vien_dat !== lectureTime.chosenMember ? 3 : 1,
+                tinh_trang: (r.thanh_vien_dat !== lectureTime.chosenMember) ? 3 : 1,
             }, {
                     where: {
                         ma_chi_tiet: r.ma_chi_tiet
@@ -589,55 +597,55 @@ router.delete('/rooms/:roomid/devices/:deviceid', adminJwtMiddleware, (req, res)
 })
 
 //---------------------------------------- users --------------------------------------------//
-// admin
-router.get('/users/admins', adminJwtMiddleware, (req, res) => {
-    console.log('admins')
-    const query = req.query
-    const page = parseInt(query.page || 0)
+// // admin
+// router.get('/users/admins', adminJwtMiddleware, (req, res) => {
+//     console.log('admins')
+//     const query = req.query
+//     const page = parseInt(query.page || 0)
 
-    AdminRepo.fetchPage(LIMIT, page)
-        .then(result => {
-            if (result.ok) {
-                res.json(result.msg)
-            } else {
-                console.log(result.msg)
-                res.status(500).send('GET Admins Error')
-            }
-        })
-})
-router.post('/users/admins/:id', adminJwtMiddleware, (req, res) => {
-    const add = req.query.addNew || false
-    const admin = req.body
-    const id = parseInt(req.params.id)
-    if (!add && id !== parseInt(admin.id)) {
-        return res.json({
-            code: 'FAILED',
-            msg: 'Mismatch ID'
-        })
-    }
-    if (add) {
-        AdminRepo.addOne(admin)
-            .then(result => {
-                if (result.ok) {
-                    res.json({ code: 'OK' })
-                } else {
-                    console.log(result.msg)
-                    res.json({ code: 'FAILED', msg: result.msg })
-                }
-            })
-    } else {
-        const old = { id }
-        AdminRepo.updateOne(old, admin)
-            .then(result => {
-                if (result.ok) {
-                    res.json({ code: 'OK' })
-                } else {
-                    console.log(result.msg)
-                    res.json({ code: 'FAILED', msg: result.msg })
-                }
-            })
-    }
-})
+//     AdminRepo.fetchPage(LIMIT, page)
+//         .then(result => {
+//             if (result.ok) {
+//                 res.json(result.msg)
+//             } else {
+//                 console.log(result.msg)
+//                 res.status(500).send('GET Admins Error')
+//             }
+//         })
+// })
+// router.post('/users/admins/:id', adminJwtMiddleware, (req, res) => {
+//     const add = req.query.addNew || false
+//     const admin = req.body
+//     const id = parseInt(req.params.id)
+//     if (!add && id !== parseInt(admin.id)) {
+//         return res.json({
+//             code: 'FAILED',
+//             msg: 'Mismatch ID'
+//         })
+//     }
+//     if (add) {
+//         AdminRepo.addOne(admin)
+//             .then(result => {
+//                 if (result.ok) {
+//                     res.json({ code: 'OK' })
+//                 } else {
+//                     console.log(result.msg)
+//                     res.json({ code: 'FAILED', msg: result.msg })
+//                 }
+//             })
+//     } else {
+//         const old = { id }
+//         AdminRepo.updateOne(old, admin)
+//             .then(result => {
+//                 if (result.ok) {
+//                     res.json({ code: 'OK' })
+//                 } else {
+//                     console.log(result.msg)
+//                     res.json({ code: 'FAILED', msg: result.msg })
+//                 }
+//             })
+//     }
+// })
 // member
 router.get('/users/members', adminJwtMiddleware, (req, res) => {
     console.log('members')

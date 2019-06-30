@@ -10,8 +10,8 @@ app.use(express.static(__dirname + '/public/'));
 app.use(express.static(__dirname + '/views/'));
 var models = require('./models');
 
-app.get('/',(req,res)=>{
-    res.sendFile(path.join(__dirname,'/views/'+'thanh-vien-dang-nhap.html'));
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '/views/' + 'thanh-vien-dang-nhap.html'));
 });
 
 var thanhvien = require('./routes/thanhvien-router');
@@ -25,11 +25,19 @@ app.get('/sync', function (req, res) {
 
 // admin
 app.use('/dist', express.static('dist'))
-const admin = require('./routes/quantri-router')
 const adminApi = require('./routes/quantri-api')
 app.use('/admin/api', adminApi)
-app.use('/admin', admin)
-app.use('/admin/*', admin)
+
+const { App } = require('./src/app')
+const { Admin } = require('./src/admin')
+const Database = require('./src/repos')
+
+const database = new Database.SequelizeDatabase(models)
+let myApp = new App('room booking', app, database)
+
+const adminComponent = new Admin()
+myApp.addComponent(adminComponent)
+
 
 var PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {

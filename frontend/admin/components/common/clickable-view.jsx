@@ -34,7 +34,9 @@ export class ClickableTableCells extends React.Component {
                     return prev.concat(cur)
                 }, []).map((v, i) => {
                     return (
-                        <td onClick={this.props.onClick} key={i}>{v}</td>
+                        <td className={`pointer ${this.props.className}`}
+                            style={this.props.style}
+                            onClick={this.props.onClick} key={i}>{v}</td>
                     )
                 })}
             </React.Fragment>

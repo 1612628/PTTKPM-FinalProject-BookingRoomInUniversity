@@ -15,7 +15,7 @@ import { loadTickets } from '../../stores/tickets/tickets.action'
 import { loadLectureTimes, uploadLectureTime } from '../../stores/rooms/rooms.action'
 import { GridPicker } from '../common/grid-picker';
 import { isFailed } from '../../libs/remote-data';
-import { PRIMARY_COLOR } from '../../libs/colors';
+import { PRIMARY } from '../../libs/colors';
 
 const validationRules = {
     errorElement: 'span',
@@ -126,6 +126,7 @@ class LectureTimeList extends React.Component {
                     }}
                 />
                 <RemoteDataModal
+                    large={true}
                     nestedModal={true}
                     initialState={this.state.modalState}
                     show={this.state.modalOpen}
@@ -169,19 +170,26 @@ class LectureTimeList extends React.Component {
                     pageSize={5}
                     items={newItem.members}
                     renderItem={item => {
+                        const chosenStyle = {
+                            ...((item.id === chosenMember) ? ({
+                                backgroundColor: PRIMARY,
+                                color: 'white'
+                            }) : {})
+                        }
                         return (
-                            <tr style={{
-                                ...((item.id === chosenMember) ? ({
-                                    backgroundColor: PRIMARY_COLOR,
-                                    color: 'white'
-                                }) : {})
-                            }}>
-                                <ClickableTableCells onClick={() => {
-                                    this.setState({ chosenMember: item.id })
-                                }}>
-                                    <div className="text-center">{item.id}</div>
-                                    <div>{item.name}</div>
-                                    <div className='text-center'>{item.point}</div>
+                            <tr>
+                                <ClickableTableCells
+                                    style={chosenStyle}
+                                    onClick={() => {
+                                        if (chosenMember === item.id) {
+                                            this.setState({ chosenMember: null, newItem: { ...newItem, chosenMember: null } })
+                                            return
+                                        }
+                                        this.setState({ chosenMember: item.id, newItem: { ...newItem, chosenMember: item.id } })
+                                    }}>
+                                    <div style={chosenStyle} className="text-center">{item.id}</div>
+                                    <div style={chosenStyle}>{item.name}</div>
+                                    <div style={chosenStyle} className='text-center'>{item.point}</div>
                                 </ClickableTableCells>
                             </tr>
                         )
@@ -209,18 +217,21 @@ class LectureTimeList extends React.Component {
                     pageSize={5}
                     items={newItem.members}
                     renderItem={item => {
+                        const chosenStyle = {
+                            ...((item.id === chosenMember) ? ({
+                                backgroundColor: PRIMARY,
+                                color: 'white'
+                            }) : {})
+                        }
                         return (
-                            <tr style={{
-                                ...((item.id === chosenMember) ? ({
-                                    backgroundColor: PRIMARY_COLOR,
-                                    color: 'white'
-                                }) : {})
-                            }}>
-                                <ClickableTableCells onClick={() => {
-                                }}>
-                                    <div className="text-center">{item.id}</div>
-                                    <div>{item.name}</div>
-                                    <div className='text-center'>{item.point}</div>
+                            <tr>
+                                <ClickableTableCells
+                                    style={chosenStyle}
+                                    onClick={() => {
+                                    }}>
+                                    <div style={chosenStyle} className="text-center">{item.id}</div>
+                                    <div style={chosenStyle}>{item.name}</div>
+                                    <div style={chosenStyle} className='text-center'>{item.point}</div>
                                 </ClickableTableCells>
                             </tr>
                         )

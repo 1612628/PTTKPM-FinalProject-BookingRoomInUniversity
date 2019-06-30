@@ -12,7 +12,7 @@ import { RemoteDataListContainer } from '../common/remote-data-list-container'
 import { RemoteDataModal, ModalState } from '../common/modal';
 import { loadRoomDevices, uploadRoomDevice, removeRoomDevice, loadAvailableDevices } from '../../stores/rooms/rooms.action'
 import { isFailed } from '../../libs/remote-data';
-import { PRIMARY_COLOR } from '../../libs/colors';
+import { PRIMARY, SECONDARY } from '../../libs/colors';
 
 const validationRules = {
     errorElement: 'span',
@@ -140,6 +140,7 @@ class DeviceList extends React.Component {
                     }} />
                 </div>}
                 <RemoteDataModal
+                    large={true}
                     nestedModal={true}
                     initialState={this.state.modalState}
                     show={this.state.modalOpen}
@@ -167,7 +168,10 @@ class DeviceList extends React.Component {
     }
 
     renderEditForm(addNew) {
-        let { availableDevices } = this.props
+        let { availableDevices, roomDevices } = this.props
+        const checkChosenDevice = (device) => {
+            return roomDevices.data.findIndex(d => d.id === device.id) >= 0
+        }
         let { newItem } = this.state
         let header = (
             <tr>
@@ -184,27 +188,40 @@ class DeviceList extends React.Component {
                 title='Thiet bi'
                 header={header}
                 renderItem={(item) => {
+                    const isChosen = checkChosenDevice(item)
+                    const chosenStyle = {
+                        ...((isChosen) ? ({
+                            backgroundColor: SECONDARY,
+                            color: 'white'
+                        }) : {}),
+                        ...((item.id === newItem.id) ? ({
+                            backgroundColor: PRIMARY,
+                            color: 'white'
+                        }) : {})
+                    }
                     return (
-                        <tr
-                            style={{
-                                ...(item.id === newItem.id ? ({
-                                    backgroundColor: PRIMARY_COLOR,
-                                    color: '#000'
-                                }) : {})
-                            }}
-                        >
-                            <ClickableTableCells onClick={() => {
-                                this.setState({ newItem: item })
-                            }}>
-                                <div className="text-center">{item.id}</div>
-                                <div>{item.name}</div>
-                                <div className="text-center">{formatDate(item.date)}</div>
-                                <div>{item.company}</div>
-                                <div className="text-right">{formatMoney(item.price) + ' VND'}</div>
+                        <tr>
+                            <ClickableTableCells
+                                style={chosenStyle}
+                                onClick={() => {
+                                    if (isChosen) {
+                                        return
+                                    }
+                                    if (item.id === newItem.id) {
+                                        return this.setState({ newItem: { ...nullItem } })
+                                    }
+                                    this.setState({ newItem: item })
+                                }}>
+                                <div style={chosenStyle} className="text-center">{item.id}</div>
+                                <div style={chosenStyle}>{item.name}</div>
+                                <div style={chosenStyle} className="text-center">{formatDate(item.date)}</div>
+                                <div style={chosenStyle}>{item.company}</div>
+                                <div style={chosenStyle} className="text-right">{formatMoney(item.price) + ' VND'}</div>
                             </ClickableTableCells>
                         </tr>
                     )
-                }}
+                }
+                }
                 onRequestPage={(page) => this.props.loadAvailableDevices(page)}
             />
         )

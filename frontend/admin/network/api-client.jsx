@@ -98,7 +98,10 @@ export class SecureApiClient {
                 }).then(response => {
                     if (response.status !== 401) {
                         // authorized
-                        this.setToken(response.headers.get(this.tokenName))
+                        const token = response.headers.get(this.tokenName)
+                        if (token) {
+                            this.setToken(token)
+                        }
                         resolve(response)
                     } else if (response.status === 401) {
                         // unauthorized
