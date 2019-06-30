@@ -184,6 +184,13 @@ function datPhong(maphong){
                     ngay_dat:ngay_dat,
                     email:email
                 };
+                window.event.preventDefault();
+                window.swal({
+                    title:'Đang đặt phòng....',
+                    text:'Vui lòng đợi trong giây lát',
+                    showConfirmButton:false,
+                    allowOutsideClick:false
+                });
                 $.ajax({
                         url:'/datphong',
                         method:"POST",
@@ -191,7 +198,7 @@ function datPhong(maphong){
                         data:JSON.stringify(body),
                         success:function(res){
                             if(res.success){
-                                Swal.fire({
+                                window.swal({
                                     type: 'info',
                                     title: 'Đặt phòng thành công, thông tin đã được gửi đến email của bạn, vui lòng đợi quản trị viên duyệt!',
                                     showConfirmButton: false,
@@ -201,7 +208,7 @@ function datPhong(maphong){
                                     location.reload(true);                 
                                 },2000);
                             }else{
-                                Swal.fire({
+                                window.swal({
                                     type: 'info',
                                     title: 'Đặt phòng thất bại',
                                     showConfirmButton: false,

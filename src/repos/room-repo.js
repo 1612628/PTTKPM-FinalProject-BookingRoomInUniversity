@@ -98,7 +98,7 @@ class SequelizeRoomRepo {
                 });
         });
     }
-    getFullHallRooUnBookedWithSpecificCampusAndDateList(coso, ngay) {
+    getFullHallUnBookedWithSpecificCampusAndDateList(coso, ngay) {
         return new Promise((resolver, reject) => {
             this.sequelize.query("select ma_phong,ten_phong,phong_hoi_truongs.mo_ta_hoi_truong,\
             tinh_trang_phongs.mo_ta,co_sos.ten_co_so,tiet_hocs.ma_tiet_hoc \

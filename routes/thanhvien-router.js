@@ -9,6 +9,12 @@ var coSoController = require('../controllers/coso');
 var chiTietDatPhongController = require('../controllers/chitietdatphong');
 var middleware = require('../controllers/middleware');
 
+
+// ----------------------------------Services--------------------------------//
+const mailer = require('../src/services/mailer');
+
+const Mailer=new mailer.NodeMailerBuilder("HCMUS PORTAL");
+// ----------------------------------Models--------------------------------//
 const models =require('../models');
 const {
     co_so,
@@ -147,7 +153,7 @@ router.post('/timkiemdanhsachphong', middleware.checkTokenKey, (req, res) => {
                     danhsachphong.push(thongtintungphong);
                     i = currentpos;
                 }
-                return RoomRepo.getFullHallRooUnBookedWithSpecificCampusAndDateList(coso,ngay);
+                return RoomRepo.getFullHallUnBookedWithSpecificCampusAndDateList(coso,ngay);
             }else{
                 res.status(404);
                 res.end();
@@ -209,57 +215,24 @@ router.post('/datphong', middleware.checkTokenKey, (req, res) => {
             tinh_trang: tinh_trang
         };
 
-        // RoomRepo.bookRoom(thongtindatphong)
-        // .then(ctdat=>{
-
-        // })
-        // .catch(err=>{
-        //     res.status(200);
-        //         res.json({
-        //             success: false,
-        //             message: 'That bai'
-        //     });
-        // });
-        
-        chiTietDatPhongController.datPhong(thongtindatphong, function (ctdat) {
+        RoomRepo.bookRoom(thongtindatphong)
+        .then(ctdat=>{
             if (ctdat != null) {
-                try {
-                    var transporter = nodemailer.createTransport({
-                        service: 'gmail',
-                        secure: true,
-                        auth: {
-                            user: 'tltbushcmus@gmail.com',
-                            pass: 'TLTbus123'
-                        }
-                    });
-                    var mailOptions = {
-                        from: `"HCMUS PORTAL" <tltbushcmus@gmail.com>`,
-                        to: email,
-                        subject: 'Thông đơn đặt phòng của bạn',
-                        text: "Đơn hàng: " + ctdat.dataValues.ma_chi_tiet + ".\n" +
-                            "Mã phòng đặt: " + phong_dat + "\n" +
-                            "Tiết bắt đầu: " + tiet_bat_dau + "\n" +
-                            "Tiết kết thúc: " + tiet_ket_thuc + "\n" +
-                            "Ngày đặt: " + ngay_dat + "\n" +
-                            "Trạng thái: Đang chờ duyệt \n"+
-                            "Bạn vui lòng đợi quản trị viên duyệt đơn hàng (tối đa là 2 ngày)"
-                    };
-                    
-                    transporter.sendMail(mailOptions, function (err, info) {
-                        if (err) {
-                            console.log(err)
-                        } else {                            
+                Mailer.buildNewBooking(mailer.MAIL_PROVIDERS.GMAIL).send(email,
+                    {bookingId:ctdat.dataValues.ma_chi_tiet,
+                        roomId:phong_dat,
+                        startId:tiet_bat_dau,
+                        endId:tiet_ket_thuc,
+                        bookingDate:ngay_dat})
+                    .then(info=>{
+                        if(info){
                             res.status(200);
                             res.json({
-                                success: true,
-                                message: 'Dat thanh cong'
-                            });
+                                success:true,
+                                message:'Đặt phòng thành công'
+                            })
                         }
-                    });
-                } catch (err) {
-                    console.log(err);
-                }
-
+                    })
             } else {
                 res.status(200);
                 res.json({
@@ -267,8 +240,14 @@ router.post('/datphong', middleware.checkTokenKey, (req, res) => {
                     message: 'That bai'
                 });
             }
+        })
+        .catch(err=>{
+            res.status(200);
+                res.json({
+                    success: false,
+                    message: 'That bai'
+            });
         });
-
     }
 
 });

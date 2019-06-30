@@ -20,7 +20,15 @@ class NodeMailer {
             text: this.template.text(content),
         };
 
-        return transporter.sendMail(mailOptions)
+        return new Promise((resolver, reject) => {
+            transporter.sendMail(mailOptions, function (err, info) {
+                if (err) {
+                    reject(null);
+                } else {
+                    resolver(info);
+                }
+            })
+        });
     }
 }
 
@@ -109,5 +117,7 @@ class NodeMailerBuilder {
 }
 
 module.exports = {
-    NodeMailerBuilder
+    MAIL_PROVIDERS,
+    NodeMailerBuilder,
+    NodeMailer
 }
