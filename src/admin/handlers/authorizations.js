@@ -12,7 +12,7 @@ const AuthorizationHandlers = adminRepo => {
         {
             method: 'post',
             path: '/login',
-            sercure: false,
+            insecure: true,
             handler: login(adminRepo)
         }
     ]
@@ -20,8 +20,16 @@ const AuthorizationHandlers = adminRepo => {
 
 const checkLogin = (req, res) => {
     console.log('check login')
+    const decoded = jwt.decode(req.headers.authorization.slice(7))
     res.json({
         isLogin: true,
+        userInfo: {
+            username: decoded.username,
+            fullname: decoded.fullname,
+            cmnd: decoded.cmnd,
+            phone: decoded.phone,
+            email: decoded.email
+        }
     })
 }
 
@@ -50,6 +58,13 @@ const login = adminRepo => (req, res) => {
                                 res.json({
                                     isLogin: true,
                                     token: token,
+                                    userInfo: {
+                                        username: admin.username,
+                                        fullname: admin.fullname,
+                                        cmnd: admin.cmnd,
+                                        phone: admin.phone,
+                                        email: admin.email
+                                    }
                                 })
                             }
                         })

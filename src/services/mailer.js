@@ -17,7 +17,7 @@ class NodeMailer {
             from: `"${this.appName}" <${this.sender.user}>`,
             to: receiver,
             subject: this.template.subject,
-            text: this.template(content),
+            text: this.template.text(content),
         };
 
         return transporter.sendMail(mailOptions)
@@ -30,7 +30,7 @@ const MAIL_PROVIDERS = {
 
 const GetMailSender = provider => {
     switch (provider) {
-        case MAIL_PROVIDERS: {
+        case MAIL_PROVIDERS.GMAIL: {
             return {
                 user: 'tltbushcmus@gmail.com',
                 pass: 'TLTbus123'
@@ -40,29 +40,49 @@ const GetMailSender = provider => {
 }
 
 const MAIL_TEMPLATES = {
-    NEW_BOOKING: (content) => {
-        return "Đơn hàng: " + content.bookingId + ".\n" +
-            "Mã phòng đặt: " + content.roomId + "\n" +
-            "Tiết bắt đầu: " + content.startId + "\n" +
-            "Tiết kết thúc: " + content.endId + "\n" +
-            "Ngày đặt: " + content.bookingDate + "\n" +
-            "Bạn vui lòng đợi quản trị viên duyệt đơn hàng (tối đa là 2 ngày)"
+    NEW_BOOKING: {
+        subject: 'Đơn đặt phòng mới',
+        text: (content) => {
+            return "Đơn hàng: " + content.bookingId + ".\n" +
+                "Mã phòng đặt: " + content.roomId + "\n" +
+                "Tiết bắt đầu: " + content.startId + "\n" +
+                "Tiết kết thúc: " + content.endId + "\n" +
+                "Ngày đặt: " + content.bookingDate + "\n" +
+                "Bạn vui lòng đợi quản trị viên duyệt đơn hàng (tối đa là 2 ngày)"
+        }
     },
-    BOOKING_ACCEPTED: (content) => {
-        return "Đơn hàng: " + content.bookingId + ".\n" +
-            "Mã phòng đặt: " + content.roomId + "\n" +
-            "Tiết bắt đầu: " + content.startId + "\n" +
-            "Tiết kết thúc: " + content.endId + "\n" +
-            "Ngày đặt: " + content.bookingDate + "\n" +
-            "Bạn vui lòng đợi quản trị viên duyệt đơn hàng (tối đa là 2 ngày)"
+    BOOKING_ACCEPTED: {
+        subject: 'Đơn đặt phòng - Chấp nhận',
+        text: (content) => {
+            return "Đơn hàng: " + content.bookingId + ".\n" +
+                "Mã phòng đặt: " + content.roomId + "\n" +
+                "Tiết bắt đầu: " + content.startId + "\n" +
+                "Tiết kết thúc: " + content.endId + "\n" +
+                "Ngày đặt: " + content.bookingDate + "\n" +
+                "Đơn đặt phòng của bạn đã được chấp nhận"
+        }
     },
-    BOOKING_REJECTED: (content) => {
-        return "Đơn hàng: " + content.bookingId + ".\n" +
-            "Mã phòng đặt: " + content.roomId + "\n" +
-            "Tiết bắt đầu: " + content.startId + "\n" +
-            "Tiết kết thúc: " + content.endId + "\n" +
-            "Ngày đặt: " + content.bookingDate + "\n" +
-            "Bạn vui lòng đợi quản trị viên duyệt đơn hàng (tối đa là 2 ngày)"
+    BOOKING_REJECTED: {
+        subject: 'Đơn đặt phòng - Từ chối',
+        text: (content) => {
+            return "Đơn hàng: " + content.bookingId + ".\n" +
+                "Mã phòng đặt: " + content.roomId + "\n" +
+                "Tiết bắt đầu: " + content.startId + "\n" +
+                "Tiết kết thúc: " + content.endId + "\n" +
+                "Ngày đặt: " + content.bookingDate + "\n" +
+                "Đơn đặt phòng của bạn đã bị từ chối"
+        }
+    },
+    BOOKING_PENDING: {
+        subject: 'Đơn đặt phòng - Chờ duyệt',
+        text: (content) => {
+            return "Đơn hàng: " + content.bookingId + ".\n" +
+                "Mã phòng đặt: " + content.roomId + "\n" +
+                "Tiết bắt đầu: " + content.startId + "\n" +
+                "Tiết kết thúc: " + content.endId + "\n" +
+                "Ngày đặt: " + content.bookingDate + "\n" +
+                "Đơn đặt phòng của bạn hiện đang được chờ duyệt"
+        }
     }
 }
 
@@ -81,6 +101,10 @@ class NodeMailerBuilder {
     buildBookingRejected(provider) {
         const sender = GetMailSender(provider)
         return new NodeMailer(this.appName, provider, sender, MAIL_TEMPLATES.BOOKING_REJECTED)
+    }
+    buildBookingPending(provider) {
+        const sender = GetMailSender(provider)
+        return new NodeMailer(this.appName, provider, sender, MAIL_TEMPLATES.BOOKING_PENDING)
     }
 }
 

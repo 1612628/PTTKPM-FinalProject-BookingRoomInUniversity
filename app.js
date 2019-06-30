@@ -24,16 +24,23 @@ app.get('/sync', function (req, res) {
 });
 
 // admin
+app.get('/dist/admin/*.js', function (req, res, next) {
+    req.url = req.url + '.gz';
+    console.log(req.url)
+    res.set('Content-Encoding', 'gzip');
+    next();
+});
 app.use('/dist', express.static('dist'))
-const adminApi = require('./routes/quantri-api')
-app.use('/admin/api', adminApi)
 
 const { App } = require('./src/app')
 const { Admin } = require('./src/admin')
+const MailerBuilder = require('./src/services/mailer')
 const Database = require('./src/repos')
 
+const appName = 'HCMUS ROOM BOOKING'
 const database = new Database.SequelizeDatabase(models)
-let myApp = new App('room booking', app, database)
+const mailerBuilder = new MailerBuilder.NodeMailerBuilder(appName)
+let myApp = new App(appName, app, database, mailerBuilder)
 
 const adminComponent = new Admin()
 myApp.addComponent(adminComponent)

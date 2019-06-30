@@ -4,6 +4,34 @@ class SequelizeMemberRepo {
         this.accounts = sequelizeModels.tai_khoan
     }
 
+    fetchOneById(id) {
+        return this.members.findByPk(id)
+            .then(member => {
+                return this.accounts.findByPk(id)
+                    .then(account => ({
+                        id: member.ma_thanh_vien,
+                        username: account.ten_dang_nhap,
+                        fullname: account.ho_va_ten,
+                        cmnd: account.cmnd,
+                        phone: account.sdt,
+                        email: account.email,
+                        point: member.diem_ca_nhan
+                    }))
+            })
+            .then(member => {
+                return {
+                    ok: true,
+                    msg: member
+                }
+            })
+            .catch(err => {
+                return {
+                    ok: false,
+                    msg: err
+                }
+            })
+    }
+
     fetchPage(_size, _page) {
         return this.members.findAndCountAll({
             ...(_page ? ({

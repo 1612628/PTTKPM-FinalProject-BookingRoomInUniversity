@@ -5,8 +5,14 @@ const { AuthorizationHandlers } = require('./authorizations')
 const { AdminHandlers } = require('./admins')
 const { MemberHandlers } = require('./members')
 const { DeviceHandlers } = require('./devices')
+const { NormalRoomHandlers } = require('./normal-rooms')
+const { HallRoomHandlers } = require('./hall-rooms')
+const { CampusHandlers } = require('./campuses')
+const { BuildingHandlers } = require('./buildings')
+const { RoomHandlers } = require('./rooms')
 
 const configRoutes = app => {
+    const database = app.database
     // define new routers
     let apiRouter = express.Router()
     let viewRouter = express.Router()
@@ -16,32 +22,36 @@ const configRoutes = app => {
         res.sendFile(path.resolve(__dirname + '/../views/index.html'))
     })
 
-    // hook authorization handlers to api router
-    const authHandlers = AuthorizationHandlers(app.database.AdminRepo)
-    authHandlers.forEach(handler => {
-        if (handler.sercure) {
-            apiRouter[handler.method](handler.path, JwtMiddleware, handler.handler)
-        } else {
+    // grouping handlers
+    const handlers = []
+    // authorization
+    handlers.push(...AuthorizationHandlers(database.AdminRepo))
+    // users
+    handlers.push(...AdminHandlers(database.AdminRepo))
+    handlers.push(...MemberHandlers(database.MemberRepo))
+    // devices
+    handlers.push(...DeviceHandlers(database.DeviceRepo))
+    // rooms
+    handlers.push(...NormalRoomHandlers(database.NormalRoomRepo))
+    handlers.push(...HallRoomHandlers(database.HallRoomRepo))
+    handlers.push(...RoomHandlers(database.RoomRepo,
+        database.LectureTimeRepo,
+        database.MemberRepo,
+        database.BookingRepo,
+        database.RoomDeviceRepo,
+        app.mailerBuilder))
+    // campuses
+    handlers.push(...CampusHandlers(new database.CampusRepoAdminAdapter(database.CampusRepo)))
+    // buildings
+    handlers.push(...BuildingHandlers(database.BuildingRepo))
+
+    // hook handlers to api router
+    handlers.forEach(handler => {
+        if (handler.insecure) {
             apiRouter[handler.method](handler.path, handler.handler)
+        } else {
+            apiRouter[handler.method](handler.path, JwtMiddleware, handler.handler)
         }
-    })
-
-    // hook admin handlers to api router
-    const adminHandlers = AdminHandlers(app.database.AdminRepo)
-    adminHandlers.forEach(handler => {
-        apiRouter[handler.method](handler.path, JwtMiddleware, handler.handler)
-    })
-
-    // hook member handlers to api router
-    const memberHandlers = MemberHandlers(app.database.MemberRepo)
-    memberHandlers.forEach(handler => {
-        apiRouter[handler.method](handler.path, JwtMiddleware, handler.handler)
-    })
-
-    // hook device handlers to api router
-    const deviceHandlers = DeviceHandlers(app.database.DeviceRepo)
-    deviceHandlers.forEach(handler => {
-        apiRouter[handler.method](handler.path, JwtMiddleware, handler.handler)
     })
 
     // hook api router into app

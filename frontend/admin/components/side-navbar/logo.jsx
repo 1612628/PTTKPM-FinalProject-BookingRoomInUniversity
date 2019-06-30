@@ -5,9 +5,9 @@ import { Image } from '../common/image'
 export class Logo extends React.Component {
     render() {
         return (
-            <div className="mr-2">
+            <div className="mr-2 text-center py-4">
                 <Link href="#">
-                    <Image src="/img/logo-khtn.png" />
+                    <Image className='w-50' src="/img/logo-khtn.png" />
                 </Link>
             </div>
         )
