@@ -11,8 +11,8 @@ module.exports = (sequelize, DataTypes) => {
   }, { underscored: true });
   phong_hoc_thuong.associate = function (models) {
     // associations can be defined here
-    phong_hoc_thuong.belongsTo(models.toa_nha,{foreignKey:'thuoc_toa_nha',targetKey:'ma_toa_nha'});
-    phong_hoc_thuong.belongsTo(models.phong,{foreign:'ma_phong_hoc_thuong',targetKey:'ma_phong'});
+    phong_hoc_thuong.belongsTo(models.toa_nha, { foreignKey: 'thuoc_toa_nha', targetKey: 'ma_toa_nha' });
+    phong_hoc_thuong.belongsTo(models.phong, { foreignKey: 'ma_phong_hoc_thuong', targetKey: 'ma_phong' });
   };
   return phong_hoc_thuong;
 };
