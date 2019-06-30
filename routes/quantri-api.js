@@ -22,8 +22,10 @@ const Op = Sequelize.Op
 //------------------------------- Repos ----------------------------------------//
 const { SequelizeAdminRepo } = require('../src/repos/admin-repo')
 const { SequelizeMemberRepo } = require('../src/repos/member-repo')
+const { SequelizeDeviceRepo } = require('../src/repos/device-repo')
 const AdminRepo = new SequelizeAdminRepo(models)
 const MemberRepo = new SequelizeMemberRepo(models)
+const DeviceRepo = new SequelizeDeviceRepo(models)
 
 //---------------------------------- jwt middleware ------------------------------------//
 const adminJwtMiddleware = (req, res, next) => {
@@ -624,7 +626,7 @@ router.post('/users/admins/:id', adminJwtMiddleware, (req, res) => {
                 }
             })
     } else {
-        const old = { ...admin, id: id }
+        const old = { id }
         AdminRepo.updateOne(old, admin)
             .then(result => {
                 if (result.ok) {
@@ -673,7 +675,7 @@ router.post('/users/members/:id', adminJwtMiddleware, (req, res) => {
                 }
             })
     } else {
-        const old = { ...member, id: id }
+        const old = { id }
         MemberRepo.updateOne(old, member)
             .then(result => {
                 if (result.ok) {
@@ -691,37 +693,22 @@ router.get('/devices', adminJwtMiddleware, (req, res) => {
     console.log('devices')
     const query = req.query
     const page = parseInt(query.page || 0)
-    const searchText = query.searchText
 
-    thiet_bi.findAndCountAll({
-        ...(page ? ({
-            limit: LIMIT,
-            offset: LIMIT * (page - 1),
-            order: [['updatedAt', 'DESC']],
-        }) : {})
-    }).then(result => {
-        const devices = (result.rows.map(r => r.dataValues).map(r => ({
-            id: r.ma_thiet_bi,
-            name: r.ten_thiet_bi,
-            date: r.ngay_san_xuat,
-            company: r.hang_san_xuat,
-            price: r.don_gia
-        })))
-        res.json({
-            devices: devices,
-            currentPage: page,
-            lastPage: Math.ceil(result.count / LIMIT),
-            total: result.count
+    DeviceRepo.fetchPage(LIMIT, page)
+        .then(result => {
+            if (result.ok) {
+                res.json(result.msg)
+            } else {
+                res.status(500).send('GET Devices Error')
+            }
         })
-    }).catch(err => {
-        res.status(500).send('GET Devices Error')
-    })
 })
 router.post('/devices/:id', adminJwtMiddleware, (req, res) => {
     const add = req.query.addNew || false
     const device = req.body
+    const id = parseInt(req.params.id)
 
-    if (add && parseInt(req.params.id) !== parseInt(device.id)) {
+    if (add && id !== parseInt(device.id)) {
         return res.json({
             code: 'FAILED',
             msg: 'Mismatch ID'
@@ -729,40 +716,22 @@ router.post('/devices/:id', adminJwtMiddleware, (req, res) => {
     }
 
     if (add) {
-        thiet_bi.create({
-            ten_thiet_bi: device.name,
-            ngay_san_xuat: new Date(device.date),
-            hang_san_xuat: device.company,
-            don_gia: device.price,
-        }).then(() => {
-            res.json({ code: 'OK' })
-        }).catch(err => {
-            console.log(err)
-            res.json({
-                code: 'FAILED',
-                msg: err
-            })
-        })
-    } else {
-        thiet_bi.update({
-            ten_thiet_bi: device.name,
-            ngay_san_xuat: new Date(device.date),
-            hang_san_xuat: device.company,
-            don_gia: device.price,
-        }, {
-                where: {
-                    ma_thiet_bi: device.id
+        DeviceRepo.addOne(device)
+            .then(result => {
+                if (result.ok) {
+                    res.json({ code: 'OK' })
+                } else {
+                    res.json({ code: 'FAILED', msg: result.msg })
                 }
-            }).then(() => {
-                res.json({
-                    code: 'OK'
-                })
-            }).catch(err => {
-                console.log(err)
-                res.json({
-                    code: 'FAILED',
-                    msg: err
-                })
+            })
+    } else {
+        DeviceRepo.updateOne({ id }, device)
+            .then(result => {
+                if (result.ok) {
+                    res.json({ code: 'OK' })
+                } else {
+                    res.json({ code: 'FAILED', msg: result.msg })
+                }
             })
     }
 })
