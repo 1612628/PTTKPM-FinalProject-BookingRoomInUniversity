@@ -12,13 +12,14 @@ module.exports = {
         isBetaMember: false
       }], {});
     */
-   return queryInterface.bulkInsert('quan_tri_viens', [
-    {ma_quan_tri:1,phong_ban:"HCMUS",
-    created_at:new Date(),
-    updated_at:new Date(),
-    tai_khoan_ma_tai_khoan:1}
-   ], {});
-   
+    return queryInterface.bulkInsert('quan_tri_viens', [
+      {
+        ma_quan_tri: 1, phong_ban: "HCMUS",
+        created_at: new Date(),
+        updated_at: new Date(),
+      }
+    ], {});
+
   },
 
   down: (queryInterface, Sequelize) => {
@@ -29,6 +30,6 @@ module.exports = {
       Example:
       return queryInterface.bulkDelete('People', null, {});
     */
-   return queryInterface.bulkDelete('quan_tri_viens', null, {});
+    return queryInterface.bulkDelete('quan_tri_viens', null, {});
   }
 };
