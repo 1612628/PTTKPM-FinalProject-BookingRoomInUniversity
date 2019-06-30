@@ -16,7 +16,6 @@ module.exports = {
         ma_phong_hoc_thuong: 1,
         mo_ta_phong: "",
         thuoc_toa_nha: 1,
-        phong_ma_phong:1,
         created_at:new Date(),
         updated_at:new Date()
       },
@@ -24,7 +23,6 @@ module.exports = {
         ma_phong_hoc_thuong: 2,
         mo_ta_phong: "",
         thuoc_toa_nha: 2,
-        phong_ma_phong:2,
         created_at:new Date(),
         updated_at:new Date()
       },
@@ -32,7 +30,6 @@ module.exports = {
         ma_phong_hoc_thuong: 3,
         mo_ta_phong: "",
         thuoc_toa_nha: 3,
-        phong_ma_phong:3,
         created_at:new Date(),
         updated_at:new Date()
       },

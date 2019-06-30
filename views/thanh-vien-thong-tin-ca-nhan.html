@@ -21,9 +21,11 @@
 </head>
 
 <body>
-  <div id="thong-tin-ca-nhan-template" class="container">
-
+  <div id="thong-tin-ca-nhan-container" class="container">
   </div>
+  <script id="thong-tin-ca-nhan-template" type="text/x-handlebars-template">
+  {{> thongTinCaNhanPartial content=this}}
+  </script>
   <!-- script -->
   <!-- JQuery -->
   <script type="text/javascript" src="/js/jquery-3.4.1.min.js"></script>
