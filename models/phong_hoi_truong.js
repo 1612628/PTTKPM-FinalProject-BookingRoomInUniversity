@@ -8,8 +8,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     mo_ta_hoi_truong: DataTypes.STRING,
     thuoc_co_so: DataTypes.INTEGER
-  }, {underscored: true});
-  phong_hoi_truong.associate = function(models) {
+  }, { underscored: true });
+  phong_hoi_truong.associate = function (models) {
     // associations can be defined here
     phong_hoi_truong.belongsTo(models.co_so,{foreignKey:'thuoc_co_so',targetKey:'ma_co_so'});
     phong_hoi_truong.belongsTo(models.phong,{foreign:'ma_phong_hoi_truong',targetKey:'ma_phong'});

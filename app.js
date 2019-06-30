@@ -17,14 +17,21 @@ app.get('/',(req,res)=>{
 var thanhvien = require('./routes/thanhvien-router');
 app.use('/', thanhvien);
 
-
 app.get('/sync', function (req, res) {
     models.sequelize.sync().then(function () {
         res.send('database created.');
     });
 });
 
-var PORT = process.env.PORT;
+// admin
+app.use('/dist', express.static('dist'))
+const admin = require('./routes/quantri-router')
+const adminApi = require('./routes/quantri-api')
+app.use('/admin/api', adminApi)
+app.use('/admin', admin)
+app.use('/admin/*', admin)
+
+var PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
     console.log(`Server is running at ${PORT}`);
 });
