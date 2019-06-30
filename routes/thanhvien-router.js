@@ -2,12 +2,29 @@ var express = require('express');
 var path = require('path');
 var router = express.Router();
 var nodemailer = require('nodemailer');
-let async = require('async');
+
 
 var phongController = require('../controllers/phong');
 var coSoController = require('../controllers/coso');
 var chiTietDatPhongController = require('../controllers/chitietdatphong');
 var middleware = require('../controllers/middleware');
+
+const models =require('../models');
+const {
+    co_so,
+    chi_tiet_dat_phong
+}=models;
+
+const db = require('../models/index');
+const {sequelize}=db;
+
+// ----------------------------------Repo--------------------------------//
+const {SequelizeRoomRepo} = require('../src/repos/room-repo');
+const {SequelizeCampusRepo} = require('../src/repos/campus-repo');
+
+const RoomRepo=new SequelizeRoomRepo(db,models);
+const CampusRepo = new SequelizeCampusRepo(models);
+// ----------------------------------Repo--------------------------------//
 
 
 router.post('/dangnhap', middleware.checkUserAndCreateTokenKey, (req, res) => {
@@ -21,9 +38,9 @@ router.get('/trangchu', middleware.checkTokenKey, (req, res) => {
 router.get('/laydanhsachphong', middleware.checkTokenKey, (req, res) => {
     var danhsachphong = [];
 
-    phongController.layChiTietChuaDatPhongPhongHocThuong(function (dsphong) {
-
-        if (dsphong) {
+    RoomRepo.getFullNormalRoomUnBookedList()
+    .then(dsphong=>{
+        if(dsphong){
             for (var i = 0; i < dsphong.length;) {
                 var thongtintungphong = {};
                 thongtintungphong.ma_phong = dsphong[i].ma_phong;
@@ -48,9 +65,14 @@ router.get('/laydanhsachphong', middleware.checkTokenKey, (req, res) => {
                 danhsachphong.push(thongtintungphong);
                 i = currentpos;
             }
-            phongController.layChiTietChuaDatPhongPhongHoiTruong(function (dsphong) {
-
-                if (dsphong) {
+            return RoomRepo.getFullHallUnBookedList();
+        }else{
+            res.status(404);
+            res.end();
+        }
+    })
+    .then(dsphong=>{
+        if (dsphong) {
                     for (var i = 0; i < dsphong.length;) {
                         var thongtintungphong = {};
                         thongtintungphong.ma_phong = dsphong[i].ma_phong;
@@ -58,8 +80,7 @@ router.get('/laydanhsachphong', middleware.checkTokenKey, (req, res) => {
                         thongtintungphong.tinh_trang = dsphong[i].mo_ta;
                         thongtintungphong.mo_ta_phong = dsphong[i].mo_ta_phong;
                         thongtintungphong.loai_phong = "Phòng hội trường";
-                        thongtintungphong.thuoc_co_so = dsphong[i].ten_co_so;
-
+                        thongtintungphong.thuoc_co_so = dsphong[i].ten_co_so;    
                         var danhsachtiethoc = [];
                         var currentpos = i;
                         for (var j = 1; j <= 12; ++j) {
@@ -81,20 +102,13 @@ router.get('/laydanhsachphong', middleware.checkTokenKey, (req, res) => {
                 } else {
                     res.end();
                 }
-            });
-        } else {
-            res.status(404);
-            res.end();
-        }
     });
-
-
-
 });
 
 router.get('/laydanhsachtencoso', middleware.checkTokenKey, (req, res) => {
-    coSoController.layDanhSachTenCoSo(function (coso) {
-        res.send(coso);
+    CampusRepo.getAllCampuses()
+    .then(campuses=>{
+        res.send(campuses);
     });
 });
 
@@ -105,9 +119,9 @@ router.post('/timkiemdanhsachphong', middleware.checkTokenKey, (req, res) => {
 
     if (coso && ngay) {
 
-        phongController.layChiTietChuaDatPhongPhongHocThuongTheoCoSoVaNgay(coso, ngay, function (dsphong) {
-            if (dsphong) {
-
+        RoomRepo.getFullNormalRoomUnBookedWithSpecificCampusAndDateList(coso,ngay)
+        .then(dsphong=>{
+            if(dsphong){
                 for (var i = 0; i < dsphong.length;) {
                     var thongtintungphong = {};
                     thongtintungphong.ma_phong = dsphong[i].ma_phong;
@@ -133,45 +147,45 @@ router.post('/timkiemdanhsachphong', middleware.checkTokenKey, (req, res) => {
                     danhsachphong.push(thongtintungphong);
                     i = currentpos;
                 }
-
-                phongController.layChiTietChuaDatPhongPhongHoiTruongTheoCoSoVaNgay(coso, ngay, function (dsphong) {
-                    if (dsphong) {
-                        for (var i = 0; i < dsphong.length;) {
-                            var thongtintungphong = {};
-                            thongtintungphong.ma_phong = dsphong[i].ma_phong;
-                            thongtintungphong.ten_phong = dsphong[i].ten_phong;
-                            thongtintungphong.tinh_trang = dsphong[i].mo_ta;
-                            thongtintungphong.mo_ta_phong = dsphong[i].mo_ta_phong;
-                            thongtintungphong.loai_phong = "Phòng hội trường";
-                            thongtintungphong.thuoc_co_so = dsphong[i].ten_co_so;
-
-                            var danhsachtiethoc = [];
-                            var currentpos = i;
-                            for (var j = 1; j <= 12; ++j) {
-                                if (dsphong[currentpos].ma_tiet_hoc == j) {
-                                    danhsachtiethoc.push(dsphong[currentpos].ma_tiet_hoc);
-                                    ++currentpos;
-                                } else {
-                                    danhsachtiethoc.push(0);
-                                }
-                            }
-                            thongtintungphong.danhsachtiethoc = danhsachtiethoc;
-                            danhsachphong.push(thongtintungphong);
-                            i = currentpos;
-                        }
-                        danhsachphong = {
-                            "danhsachphong": danhsachphong
-                        };
-                        res.send(danhsachphong);
-                    } else {
-                        res.end();
-                    }
-                });
-            } else {
+                return RoomRepo.getFullHallRooUnBookedWithSpecificCampusAndDateList(coso,ngay);
+            }else{
                 res.status(404);
                 res.end();
             }
-        });
+        })
+        .then(dsphong=>{
+            if (dsphong) {
+                for (var i = 0; i < dsphong.length;) {
+                    var thongtintungphong = {};
+                    thongtintungphong.ma_phong = dsphong[i].ma_phong;
+                    thongtintungphong.ten_phong = dsphong[i].ten_phong;
+                    thongtintungphong.tinh_trang = dsphong[i].mo_ta;
+                    thongtintungphong.mo_ta_phong = dsphong[i].mo_ta_phong;
+                    thongtintungphong.loai_phong = "Phòng hội trường";
+                    thongtintungphong.thuoc_co_so = dsphong[i].ten_co_so;
+
+                    var danhsachtiethoc = [];
+                    var currentpos = i;
+                    for (var j = 1; j <= 12; ++j) {
+                        if (dsphong[currentpos].ma_tiet_hoc == j) {
+                            danhsachtiethoc.push(dsphong[currentpos].ma_tiet_hoc);
+                            ++currentpos;
+                        } else {
+                            danhsachtiethoc.push(0);
+                        }
+                    }
+                    thongtintungphong.danhsachtiethoc = danhsachtiethoc;
+                    danhsachphong.push(thongtintungphong);
+                    i = currentpos;
+                }
+                danhsachphong = {
+                    "danhsachphong": danhsachphong
+                };
+                res.send(danhsachphong);
+            } else {
+                res.end();
+            }
+        });    
 
     }
 });
@@ -195,6 +209,18 @@ router.post('/datphong', middleware.checkTokenKey, (req, res) => {
             tinh_trang: tinh_trang
         };
 
+        // RoomRepo.bookRoom(thongtindatphong)
+        // .then(ctdat=>{
+
+        // })
+        // .catch(err=>{
+        //     res.status(200);
+        //         res.json({
+        //             success: false,
+        //             message: 'That bai'
+        //     });
+        // });
+        
         chiTietDatPhongController.datPhong(thongtindatphong, function (ctdat) {
             if (ctdat != null) {
                 try {
@@ -215,6 +241,7 @@ router.post('/datphong', middleware.checkTokenKey, (req, res) => {
                             "Tiết bắt đầu: " + tiet_bat_dau + "\n" +
                             "Tiết kết thúc: " + tiet_ket_thuc + "\n" +
                             "Ngày đặt: " + ngay_dat + "\n" +
+                            "Trạng thái: Đang chờ duyệt \n"+
                             "Bạn vui lòng đợi quản trị viên duyệt đơn hàng (tối đa là 2 ngày)"
                     };
                     
@@ -247,7 +274,7 @@ router.post('/datphong', middleware.checkTokenKey, (req, res) => {
 });
 
 router.get('/thongtincanhan', middleware.checkTokenKey, (req, res) => {
-
-})
+    res.sendFile(path.join(__dirname,'../views/'+'thanh-vien-thong-tin-ca-nhan.html'));
+});
 
 module.exports = router;
