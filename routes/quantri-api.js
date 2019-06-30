@@ -302,6 +302,7 @@ router.post('/rooms/normals/:id', adminJwtMiddleware, (req, res) => {
         }).then(room => {
             return phong_hoc_thuong.create({
                 ma_phong_hoc_thuong: room.ma_phong,
+                phong_ma_phong: room.ma_phong,
                 thuoc_toa_nha: normal.building
             })
         }).then(() => {
@@ -362,6 +363,7 @@ router.post('/rooms/halls/:id', adminJwtMiddleware, (req, res) => {
         }).then(room => {
             return phong_hoi_truong.create({
                 ma_phong_hoi_truong: room.ma_phong,
+                phong_ma_phong: room.ma_phong,
                 thuoc_co_so: hall.campus
             })
         }).then(() => {
