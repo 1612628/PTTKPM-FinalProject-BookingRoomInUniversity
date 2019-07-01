@@ -27,4 +27,4 @@
     curl localhost:8080/sync
     npx sequelize db:seed:all
 ```   
-7. Ứng dụng sẵn sàng 
+7. Ứng dụng sẵn sàng ở port 8080
